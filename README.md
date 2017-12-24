@@ -1,5 +1,5 @@
 # diabetes
- Pima Indians Diabetes Data Set with Weka
+Analysing Pima Indians Diabetes Data Set with Weka
  
 Reproducing case study of Shvartser [1] posted at Dr. Brownlee's comprehensive ML learning website [2].
  
