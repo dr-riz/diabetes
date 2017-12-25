@@ -1,4 +1,4 @@
-inst#,actual,predicted,error,distribution,
+inst#,actual,predicted,error,neg_prob,pos_prob
 1,1:tested_negative,1:tested_negative,,*0.744,0.256
 2,1:tested_negative,1:tested_negative,,*0.577,0.423
 3,1:tested_negative,1:tested_negative,,*0.829,0.171
@@ -767,4 +767,3 @@ inst#,actual,predicted,error,distribution,
 74,2:tested_positive,1:tested_negative,+,*0.683,0.317
 75,2:tested_positive,1:tested_negative,+,*0.641,0.359
 76,2:tested_positive,1:tested_negative,+,*0.832,0.168
-

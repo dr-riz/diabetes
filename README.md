@@ -9,38 +9,89 @@ I don't see much likelihood from the scatter plot. Both positive and negative da
 
 The data sets are reproduced with the following filters:
 (1) diabetes.arff: original unchanged data set.
-(2) diabetes_discretize.arff: supervised.attribute.Discretize
-(3) diabetes_missing.arff: It is ambiguous which filter was applied to generate this data set in the case study, so I skip this file. Instead, I provide further treament in (5) and (6).
-(4) diabetes_normalized.arff: unsupervised.attribute.Normalize on all attributes. Not applied on the class, which is nominal anyways.
-(5) diabetes_remove_missing.arff: Fellow user (credits due) at The UCI ML repository [3,4] observes there are zeros in places where they are biologically impossible, such as the blood pressure. They are likely missing values. I further checked the remaining attributes. They either cannot be zero (e.g. mass) or don't have zero (e.g. pedigree), except pregnancy. In the former case, I assume zero indicates missing values, and use Brownlee's post [5] to remove the missing values. This reduces the number of instances from 768 to 392. Needless to say, this purges data set by half.
-(6) diabetes_replaced_missing.arff: Following on comment on (5), I again use Brownlee's post [5] to replace the missing values with the mean of the attribute value. 
-(7) diabetes_square.arff: <TBD> 
-(8) diabetes_standardized.arff: unsupervised.attribute.Standardize
+(2) discretize.arff: supervised.attribute.Discretize
+(3) missing.arff: It is ambiguous which filter was applied to generate this data set in the case study, so I skip this file. Instead, I provide further treament in (5) and (6).
+(4) normalized.arff: unsupervised.attribute.Normalize on all attributes. Not applied on the class, which is nominal anyways.
+(5) remove_missing.arff: Fellow user (credits due) at The UCI ML repository [3,4] observes there are zeros in places where they are biologically impossible, such as the blood pressure. They are likely missing values. I further checked the remaining attributes. They either cannot be zero (e.g. mass) or don't have zero (e.g. pedigree), except pregnancy. In the former case, I assume zero indicates missing values, and use Brownlee's post [5] to remove the missing values. This reduces the number of instances from 768 to 392. Needless to say, this purges data set by half.
+(6) replaced_missing.arff: Following on comment on (5), I again use Brownlee's post [5] to replace the missing values with the mean of the attribute value. 
+(7) square.arff: <TBD> 
+(8) standardized.arff: unsupervised.attribute.Standardize
 
 With these data sets, I have been able to reproduce the Weka Experiment in part 2. I added one more algorithm for establishing a baseline namely, zeroR. The numbers are highly similar as reported. We have considered both linear, e.g. Logistic Regression (LR), and non-linear, e.g. Random Forest (RF), classifiers. We also see that their evaluation metrics are not statistically different. In such a case, linear model is preferable and I use LR for further analysis.
 
 Now, the case study rightly notices that there is class imbalance: 65% -ve, and 35% +ve. In part 2, I am unsure if the class was balanced in cross validation. In the interest of reproducing the study, I do not balance the classes for the above data sets, namely (1-8). As you may know, class imbalance leads to a majority classifier, and we see this artifact when ZeroR gives us about 65% accuracy. To balance the classes, I generate two data sets:
 
-(9) diabetes_oversampling.arff: increases the number of minority class (+ve) instances to be at par with the majority class (-ve) instances, namely 500. I applied the SMOTE and Randomize filters in that order. See Shams youtube for step-by-step method [7].   
-(10) diabetes_undersampling.arff: I use SpreadsubSample and Randomize fileters in that order to reduce the number of majority class instances to be at par with minority class instances, namely 268. The total number of instances are now
+(9) oversampling.arff: increases the number of minority class (+ve) instances to be at par with the majority class (-ve) instances, namely 500. I applied the SMOTE and Randomize filters in that order. The total instance count becomes 1,000. See Shams youtube for step-by-step method [7]. This mildly contaminate the pure data samples with synthethic ones.   
+(10) undersampling.arff: I use SpreadsubSample and Randomize fileters in that order to reduce the number of majority class instances to be at par with minority class instances, namely 268. The total number of instances are now 536. Again, see Shams second video [8] for step-by-step procedure. This method removes valuable instances of the majority class. 
+
+Intuitively, acquiring additional instances is likely to be more than undersampling the majority class or just oversampling the minority class.
+
+The accuracy or percent_correct in the Weka Experiment are stated below:
+
+Dataset        		(1) ZeroR | (2) LR
+--------------------------------------------------
+diabetes.arff       	65.11 |   77.10 v
+oversampling.arff   	51.74 |   75.51 v
+undersampling.arff  	49.62 |   73.73 v
+--------------------------------------------------
+
+where v represents the statistical difference.
+
+Note, the accuracy of ZeroR dropped to about 50% as wanted. The accuracy of LR is still close to our previous best. Determining statistical significance of accuracies for LR across the data sets is outstanding. 
+
+Next, the Area under ROC in the Weka Experiment are stated below:
+
+Dataset        		(1) ZeroR | (2) LR
+------------------------------------------------
+diabetes.arff       	0.50 |   0.83 v
+oversampling.arff   	0.50 |   0.84 v
+undersampling.arff  	0.50 |   0.82 v
+------------------------------------------------
+
+Finally, the F-Measures in the Weka Experiment are stated below:
+
+Dataset        		(1) ZeroR | (2) LR
+------------------------------------------------
+diabetes.arff       	0.79 |   0.83 v
+oversampling.arff   	0.00 |   0.75 v
+undersampling.arff  	0.50 |   0.74 v
+
+Note, F-Measure of ZeroR for oversampling is 0.00. This seems incorrect, and is different (0.446) to the same metric, algorithm and data set in Weka Explorer.
+
+It might be nice to see the associated probabilities with a prediction. Incidentally, LR provides associated probability out-of-the-box. The following direction will allow you to store the predictions in csv.
+
+Weka Explorer -> Classify -> More options -> Output predictions Choose -> CSV file
+
+I build LR model with "Use training set" and store the predictions in the pred.csv file. A sample:
+
+inst#,actual,predicted,error,neg_prob,pos_prob
+1,1:tested_negative,1:tested_negative,,*0.744,0.256
+2,1:tested_negative,1:tested_negative,,*0.577,0.423
+3,1:tested_negative,1:tested_negative,,*0.829,0.171
+4,1:tested_negative,1:tested_negative,,*0.994,0.006
+5,1:tested_negative,2:tested_positive,+,0.424,*0.576
+
+the * sign indicates the probability of the predicted class. 
+the + sign indicate an incorrect prediction.
+
+Whichever class has the highest probability i.e. greater than 0.5 is the predicted class. The confusion matrix for building LR across the whole data set:
+
+=== Confusion Matrix ===
+   a   b   <-- classified as
+ 446  54 |   a = tested_negative
+ 111 157 |   b = tested_positive
+ 
+The false positives (54 above) cause unnecessary worry, and typically follows another test to confirm the result. The false negatives (111 above) are really bad. In this case, LR is predicting that a subject does NOT have a disease where they may have actually got one. Naturally, a physician might want to reduce the number of false negatives at the cost of increasing false positives. I could not adjust the probability threshold from 0.5 to an another value in Weka.
+
+I did a work around by building on pred.csv file. At the bottom of diabetes_proc tab in the diabetes.xlsx file, positive probability and trigger are drawn. The positive probability has been sorted and hence the ascending curve is seen. As the probability crosses 0.5+delta, the trigger happens and the prediction is a positive test. 
+
+I invite you to change the value of delta to see the effects on the chart and the confusion matrix. The value of false negatives reduces from 112 to 84 when the delta value is reduced from zero to -0.10. As a side effect, false positives also increase from 69 to 94 with this delta change.
+
+Conclusions
+My thoughts are Weka Explorer and Experimenter are excellent tools to get quick and dirty analysis with algorithms and data sets without writing code. For fine tuning and run time changes, coding is needed.
 
 
-
-
-
-
-Nonetheless, I generate
-
-In part 2, there are 3 missing datasets: (a) _missing, (b) _remove_missing and (c) _replaced_missing. how did you tread (a) and (c)?
-
-
-
-I assume z
-
-or ca, and we assume so. 
-
-(6) 
-
+References
  
 [1] https://machinelearningmastery.com/case-study-predicting-the-onset-of-diabetes-within-five-years-part-1-of-3/
 [2] https://machinelearningmastery.com/start-here/
@@ -50,3 +101,4 @@ or ca, and we assume so.
 [6] https://machinelearningmastery.leadpages.co/leadbox/144d0b573f72a2%3A164f8be4f346dc/5675267779461120/
 [7] https://www.youtube.com/watch?v=w14ha2Fmg6U&t=242s
 [8] https://www.youtube.com/watch?v=ocOlm73HeNs
+[9] https://social.msdn.microsoft.com/Forums/azure/en-US/71d0efe7-4de0-4434-a4a6-5c27af876c1b/smote-consequences-a-question-and-an-alternative?forum=MachineLearning
