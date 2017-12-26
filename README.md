@@ -77,22 +77,26 @@ Weka Explorer -> Classify -> More options -> Output predictions Choose -> CSV fi
 
 I build LR model with "Use training set" and store the predictions in the pred.csv file. A sample:
 
+<pre>
 inst#,actual,predicted,error,neg_prob,pos_prob
 1,1:tested_negative,1:tested_negative,,*0.744,0.256
 2,1:tested_negative,1:tested_negative,,*0.577,0.423
 3,1:tested_negative,1:tested_negative,,*0.829,0.171
 4,1:tested_negative,1:tested_negative,,*0.994,0.006
 5,1:tested_negative,2:tested_positive,+,0.424,*0.576
+</pre>
 
 the * sign indicates the probability of the predicted class. 
 the + sign indicate an incorrect prediction.
 
 Whichever class has the highest probability i.e. greater than 0.5 is the predicted class. The confusion matrix for building LR across the whole data set:
 
+<pre>
 === Confusion Matrix ===
    a   b   <-- classified as
  446  54 |   a = tested_negative
  111 157 |   b = tested_positive
+</pre>
  
 The false positives (54 above) cause unnecessary worry, and typically follows another test to confirm the result. The false negatives (111 above) are really bad. In this case, LR is predicting that a subject does NOT have a disease where they may have actually got one. Naturally, a physician might want to reduce the number of false negatives at the cost of increasing false positives. I could not adjust the probability threshold from 0.5 to an another value in Weka.
 
@@ -111,7 +115,7 @@ My thoughts are Weka Explorer and Experimenter are excellent tools to get quick 
 
 
 ### References
- 
+<pre> 
 [1] https://machinelearningmastery.com/case-study-predicting-the-onset-of-diabetes-within-five-years-part-1-of-3/
 [2] https://machinelearningmastery.com/start-here/
 [3] https://archive.ics.uci.edu/ml/datasets/pima+indians+diabetes
@@ -122,3 +126,4 @@ My thoughts are Weka Explorer and Experimenter are excellent tools to get quick 
 [8] https://www.youtube.com/watch?v=ocOlm73HeNs
 [9] https://social.msdn.microsoft.com/Forums/azure/en-US/71d0efe7-4de0-4434-a4a6-5c27af876c1b/smote-consequences-a-question-and-an-alternative?forum=MachineLearning
 [10] https://machinelearningmastery.com/applied-machine-learning-weka-mini-course/
+</pre>
