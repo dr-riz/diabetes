@@ -2,11 +2,21 @@
 
 print("Reproducing case study of Shvartser posted at Dr. Brownlee's machinelearningmastery.com")
 
+# preproc imports
 import pandas
 from pandas.tools.plotting import scatter_matrix
 import matplotlib.pyplot as plt
 from sklearn import preprocessing as preproc
 import numpy
+
+# algo eval imports
+from sklearn import model_selection
+from sklearn.metrics import accuracy_score
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.svm import SVC
+
 
 datafile="./diabetes.data"
 headers=['preg', 'plas', 'pres', 'skin', 'test', 'mass', 'pedi', 'age', 'class']
@@ -82,6 +92,32 @@ standardized_attr = scaler.transform(diabetes_attr)
 standardized_df = pandas.DataFrame(standardized_attr)
 print(standardized_df.describe())
 
+print(" = 5. Evaluate Some Algorithms = ")
+# Split-out validation dataset
+print(" == 5.1 Create a Validation Dataset: Split-out validation dataset == ")
 
+# Test options and evaluation metric
+print(" == 5.2 Test Harness: Test options and evaluation metric == ")
+seed = 7
+scoring = 'accuracy'
+
+# Spot Check Algorithms
+print("== 5.3 Build Models: build and evaluate our five models, Spot Check Algorithms ==")
+models = []
+models.append(('LR', LogisticRegression()))
+models.append(('LDA', LinearDiscriminantAnalysis()))
+models.append(('KNN', KNeighborsClassifier()))
+models.append(('SVM', SVC()))
+# evaluate each model in turn
+results = []
+names = []
+print("algorithm",scoring,"mean","std")
+for name, model in models:
+	kfold = model_selection.KFold(n_splits=10, random_state=seed)
+	cv_results = model_selection.cross_val_score(model, diabetes_attr, label, cv=kfold, scoring=scoring)
+	results.append(cv_results)
+	names.append(name)
+	msg = "%s: %f (%f)" % (name, cv_results.mean(), cv_results.std())
+	print(msg)
 
 
