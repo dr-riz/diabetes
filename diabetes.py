@@ -13,9 +13,13 @@ import numpy
 from sklearn import model_selection
 from sklearn.metrics import accuracy_score
 from sklearn.linear_model import LogisticRegression
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.tree import DecisionTreeClassifier
+
+#from sklearn.neighbors import KNeighborsClassifier
+#from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+#from sklearn.svm import SVC
 
 # significance tests
 import scipy.stats as stats
@@ -113,9 +117,12 @@ datasets.append(('standardized_attr', standardized_attr))
 
 models = []
 models.append(('LR', LogisticRegression()))
-models.append(('LDA', LinearDiscriminantAnalysis()))
-models.append(('KNN', KNeighborsClassifier()))
-models.append(('SVM', SVC()))
+models.append(('NB', GaussianNB()))
+models.append(('RF', RandomForestClassifier()))
+models.append(('DT', DecisionTreeClassifier()))
+#models.append(('LDA', LinearDiscriminantAnalysis()))
+#models.append(('KNN', KNeighborsClassifier()))
+#models.append(('SVM', SVC()))
 
 print("eval metric: " + scoring)
 for dataname, dataset in datasets:
