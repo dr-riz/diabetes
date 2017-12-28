@@ -103,21 +103,28 @@ scoring = 'accuracy'
 
 # Spot Check Algorithms
 print("== 5.3 Build Models: build and evaluate our five models, Spot Check Algorithms ==")
+datasets = []
+datasets.append(('diabetes_attr', diabetes_attr))
+datasets.append(('normalized_attr', normalized_attr))
+datasets.append(('standardized_attr', standardized_attr))
+
 models = []
 models.append(('LR', LogisticRegression()))
 models.append(('LDA', LinearDiscriminantAnalysis()))
 models.append(('KNN', KNeighborsClassifier()))
 models.append(('SVM', SVC()))
-# evaluate each model in turn
-results = []
-names = []
-print("algorithm",scoring,"mean","std")
-for name, model in models:
-	kfold = model_selection.KFold(n_splits=10, random_state=seed)
-	cv_results = model_selection.cross_val_score(model, diabetes_attr, label, cv=kfold, scoring=scoring)
-	results.append(cv_results)
-	names.append(name)
-	msg = "%s: %f (%f)" % (name, cv_results.mean(), cv_results.std())
-	print(msg)
+
+for dataname, dataset in datasets:
+	# evaluate each model in turn
+	results = []
+	names = []
+	print(dataname+ ",algorithm," + scoring + ",mean," + "std")
+	for name, model in models:
+		kfold = model_selection.KFold(n_splits=10, random_state=seed)
+		cv_results = model_selection.cross_val_score(model, dataset, label, cv=kfold, scoring=scoring)
+		results.append(cv_results)
+		names.append(name)
+		msg = "%s: %f (%f)" % (name, cv_results.mean(), cv_results.std())
+		print(msg)
 
 
