@@ -17,6 +17,9 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.svm import SVC
 
+# significance tests
+import scipy.stats as stats
+import math
 
 datafile="./diabetes.data"
 headers=['preg', 'plas', 'pres', 'skin', 'test', 'mass', 'pedi', 'age', 'class']
@@ -114,19 +117,26 @@ models.append(('LDA', LinearDiscriminantAnalysis()))
 models.append(('KNN', KNeighborsClassifier()))
 models.append(('SVM', SVC()))
 
+print("eval metric: " + scoring)
 for dataname, dataset in datasets:
 	# evaluate each model in turn
 	results = []
 	names = []
-	print(dataname+ ",algorithm," + scoring + ",mean," + "std")
+	print("= " + dataname + " = ")
+	print("algorithm,mean,std,signficance,p-val")
 	for name, model in models:
 		kfold = model_selection.KFold(n_splits=10, random_state=seed)
 		cv_results = model_selection.cross_val_score(model, dataset, label, cv=kfold, scoring=scoring)
 		results.append(cv_results)
-		print("cv_results")
-		print(cv_results)
+		#print("cv_results")
+		#print(cv_results)
 		names.append(name)
-		msg = "%s: %f (%f)" % (name, cv_results.mean(), cv_results.std())
+		
+		t, prob = stats.ttest_rel(a= cv_results,b= results[0])
+		#print("LR vs ", name, t,prob)
+		statistically_different = (prob >0.05)
+		
+		msg = "%s: %f (%f) %s %f" % (name, cv_results.mean(), cv_results.std(), statistically_different, prob)
 		print(msg)
 
 
