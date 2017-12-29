@@ -16,14 +16,23 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import train_test_split
 
 #from sklearn.neighbors import KNeighborsClassifier
 #from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 #from sklearn.svm import SVC
 
+# fine tuning
+from sklearn.linear_model import Ridge
+from sklearn.model_selection import GridSearchCV
+
 # significance tests
 import scipy.stats as stats
 import math
+
+# build and save model using Pickle
+from random import *
+import pickle
 
 datafile="./diabetes.data"
 headers=['preg', 'plas', 'pres', 'skin', 'test', 'mass', 'pedi', 'age', 'class']
@@ -70,12 +79,12 @@ print("== 4.2 Multivariate Plots: Multivariate Plots:scatter plot matrix. why? t
 
 numpy.set_printoptions(precision=3)
 array = numpy.array(dataset.values)
-
+#array = dataset.values
 
 #datasets
 ## diabetes.arff -- unchanged, original
-## standardized.arff
 ## normalized.arff
+## standardized.arff
 ## discretize.arff
 ## missing.arff
 ## remove_missing.arff:
@@ -86,6 +95,7 @@ print("diabetes_attr: unchanged, original attributes")
 diabetes_attr = array[:,0:8]
 label = array[:,8] #unchanged across preprocessing?
 diabetes_df = pandas.DataFrame(diabetes_attr)
+
 
 print("normalized_attr: range of 0 to 1")
 scaler = preproc.MinMaxScaler().fit(diabetes_attr)
@@ -99,6 +109,8 @@ standardized_attr = scaler.transform(diabetes_attr)
 standardized_df = pandas.DataFrame(standardized_attr)
 print(standardized_df.describe())
 
+## missing.arff
+
 print(" = 5. Evaluate Some Algorithms = ")
 # Split-out validation dataset
 print(" == 5.1 Create a Validation Dataset: Split-out validation dataset == ")
@@ -107,6 +119,8 @@ print(" == 5.1 Create a Validation Dataset: Split-out validation dataset == ")
 print(" == 5.2 Test Harness: Test options and evaluation metric == ")
 seed = 7
 scoring = 'accuracy'
+
+
 
 # Spot Check Algorithms
 print("== 5.3 Build Models: build and evaluate our five models, Spot Check Algorithms ==")
@@ -158,3 +172,37 @@ for dataname, dataset in datasets:
 	#plt.show()
 
 
+test_size = 0.33
+X_train, X_test, Y_train, Y_test = train_test_split(diabetes_attr, label, test_size=test_size,
+random_state=seed)
+
+alphas = numpy.array([1,0.1,0.01,0.001,0.0001,0])
+param_grid = dict(alpha=alphas)
+model = Ridge()
+grid = GridSearchCV(estimator=model, param_grid=param_grid)
+grid.fit(X_train, Y_train)
+print("grid.best_score=",grid.best_score_)
+print("grid.best_estimator_.alpha=",grid.best_estimator_.alpha)
+
+#building model)
+model = Ridge(grid.best_estimator_.alpha)
+model.fit(X_train, Y_train)
+result = model.score(X_test, Y_test) # determine r2 value
+print("score on X_test before storing=",result)
+
+#predict
+rand_index=randint(0, len(label)-1)
+sample = diabetes_attr[rand_index]
+actual = label[rand_index]
+prediction = model.predict([sample])[0]
+print("(actual,prediction) of sample", sample, " at random index=", rand_index, actual, prediction)
+
+# save the model to disk
+filename = 'diabetes_py_model.sav' 
+pickle.dump(model, open(filename, 'wb'))
+# some time later...
+# load the model from disk
+loaded_model = pickle.load(open(filename, 'rb')) 
+result = loaded_model.score(X_test, Y_test)
+
+print("score on X_test after storing=",result)
