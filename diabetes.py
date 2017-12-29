@@ -141,9 +141,20 @@ for dataname, dataset in datasets:
 		
 		t, prob = stats.ttest_rel(a= cv_results,b= results[0])
 		#print("LR vs ", name, t,prob)
-		statistically_different = (prob >0.05)
+		# Below 0.05, significant. Over 0.05, not significant. 
+		# http://blog.minitab.com/blog/understanding-statistics/what-can-you-say-when-your-p-value-is-greater-than-005
+		statistically_different = (prob < 0.05)
 		
 		msg = "%s: %f (%f) %s %f" % (name, cv_results.mean(), cv_results.std(), statistically_different, prob)
 		print(msg)
+
+	# Compare Algorithms
+	print(" == 5.4 Select Best Model, Compare Algorithms == ")
+	fig = plt.figure()
+	fig.suptitle('Algorithm Comparison for ' + dataname)
+	ax = fig.add_subplot(111) # what does 111 mean?
+	plt.boxplot(results)
+	ax.set_xticklabels(names)
+	#plt.show()
 
 
