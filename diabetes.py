@@ -82,14 +82,16 @@ array = numpy.array(dataset.values)
 #array = dataset.values
 
 #datasets
-## diabetes.arff -- unchanged, original
-## normalized.arff
-## standardized.arff
+## x diabetes.arff -- unchanged, original
+## x normalized.arff
+## x standardized.arff
 ## discretize.arff
-## missing.arff
-## remove_missing.arff:
-## replaced_missing.arff:
+## x missing.arff (ambigious)
+## x remove_missing.arff:
+## x replaced_missing.arff:
 ## square.arff
+## oversampling
+## undersampling
 
 print("diabetes_attr: unchanged, original attributes")
 diabetes_attr = array[:,0:8]
@@ -124,9 +126,6 @@ print(dataset_cp.head(10))
 # count the number of NaN values in each column
 print(dataset_cp.isnull().sum())
 
-# drop the class attribute
-dataset_cp.drop(['class'], axis=1, inplace = True)
-
 # summarize the number of rows and columns in the dataset
 print(dataset_cp.shape)
 
@@ -136,7 +135,8 @@ dataset_missing = dataset_cp.dropna()
 # summarize the number of rows and columns in the dataset
 print(dataset_cp.shape)
 
-missing_attr = numpy.array(dataset_missing.values)
+missing_attr = numpy.array(dataset_missing.values[:,0:8])
+missing_label = numpy.array(dataset_missing.values[:,8])
 
 
 # fill missing values with mean column values
@@ -144,7 +144,8 @@ dataset_impute = dataset_cp.fillna(dataset_cp.mean())
 # count the number of NaN values in each column
 print(dataset_impute.isnull().sum())
 
-impute_attr = numpy.array(dataset_impute.values)
+impute_attr = numpy.array(dataset_impute.values[:,0:8])
+#impute_label = numpy.array(dataset_impute.values[:,8])
 
 print(" = 5. Evaluate Some Algorithms = ")
 # Split-out validation dataset
@@ -156,15 +157,14 @@ seed = 7
 scoring = 'accuracy'
 
 
-
 # Spot Check Algorithms
 print("== 5.3 Build Models: build and evaluate our five models, Spot Check Algorithms ==")
 datasets = []
-datasets.append(('diabetes_attr', diabetes_attr))
-datasets.append(('normalized_attr', normalized_attr))
-datasets.append(('standardized_attr', standardized_attr))
-datasets.append(('impute_attr', impute_attr))
-# datasets.append(('missing_attr', missing_attr))
+datasets.append(('diabetes_attr', diabetes_attr, label))
+datasets.append(('normalized_attr', normalized_attr, label))
+datasets.append(('standardized_attr', standardized_attr, label))
+datasets.append(('impute_attr', impute_attr, label))
+datasets.append(('missing_attr', missing_attr, missing_label))
 
 models = []
 models.append(('LR', LogisticRegression()))
@@ -176,7 +176,7 @@ models.append(('DT', DecisionTreeClassifier()))
 #models.append(('SVM', SVC()))
 
 print("eval metric: " + scoring)
-for dataname, dataset in datasets:
+for dataname, attributes, target in datasets:
 	# evaluate each model in turn
 	results = []
 	names = []
@@ -184,7 +184,7 @@ for dataname, dataset in datasets:
 	print("algorithm,mean,std,signficance,p-val")
 	for name, model in models:
 		kfold = model_selection.KFold(n_splits=10, random_state=seed)
-		cv_results = model_selection.cross_val_score(model, dataset, label, cv=kfold, scoring=scoring)
+		cv_results = model_selection.cross_val_score(model, attributes, target, cv=kfold, scoring=scoring)
 		results.append(cv_results)
 		#print("cv_results")
 		#print(cv_results)
