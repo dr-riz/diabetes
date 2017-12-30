@@ -8,6 +8,7 @@ from pandas.tools.plotting import scatter_matrix
 import matplotlib.pyplot as plt
 from sklearn import preprocessing as preproc
 import numpy
+from sklearn.utils import resample
 
 # algo eval imports
 from sklearn import model_selection
@@ -145,7 +146,32 @@ dataset_impute = dataset_cp.fillna(dataset_cp.mean())
 print(dataset_impute.isnull().sum())
 
 impute_attr = numpy.array(dataset_impute.values[:,0:8])
-#impute_label = numpy.array(dataset_impute.values[:,8])
+
+#undersampling
+# Separate majority and minority classes
+df_majority = dataset[dataset['class']==0]
+df_minority = dataset[dataset['class']==1]
+
+# Downsample majority class
+
+df_majority_downsampled = resample(df_majority, 
+                                 replace=False,    # sample without replacement
+                                 n_samples=268,     # to match minority class
+                                 random_state=7) # reproducible results
+ 
+# Combine minority class with downsampled majority class
+df_downsampled = pandas.concat([df_majority_downsampled, df_minority])
+ 
+print("undersampled", df_downsampled.groupby('class').size()) 
+# Display new class counts
+#df_downsampled.balance.value_counts()
+
+
+undersampling_attr = numpy.array(dataset_missing.values[:,0:8])
+undersampling_label = numpy.array(dataset_missing.values[:,8])
+
+
+#exit(0)
 
 print(" = 5. Evaluate Some Algorithms = ")
 # Split-out validation dataset
@@ -165,6 +191,7 @@ datasets.append(('normalized_attr', normalized_attr, label))
 datasets.append(('standardized_attr', standardized_attr, label))
 datasets.append(('impute_attr', impute_attr, label))
 datasets.append(('missing_attr', missing_attr, missing_label))
+datasets.append(('undersampling_attr', missing_attr, undersampling_label))
 
 models = []
 models.append(('LR', LogisticRegression(class_weight='balanced')))
@@ -222,7 +249,7 @@ print("ridge.best_score=",ridge.best_score_)
 print("ridge.best_estimator_.alpha=",ridge.best_estimator_.alpha)
 
 param_grid = {'C': [0.001, 0.01, 0.1, 1, 10, 100, 1000], 'penalty': ['l2','l1']}
-logr = GridSearchCV(LogisticRegression(class_weight='balanced'), param_grid)
+logr = GridSearchCV(LogisticRegression(class_weight='balanced'), param_grid, scoring='roc_auc')
 logr.fit(X_train, Y_train)
 print("logr.best_score=",logr.best_score_)
 print("logr.best_estimator_.C=",logr.best_estimator_.C)
