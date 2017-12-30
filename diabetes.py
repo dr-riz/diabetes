@@ -152,6 +152,8 @@ impute_attr = numpy.array(dataset_impute.values[:,0:8])
 df_majority = dataset[dataset['class']==0]
 df_minority = dataset[dataset['class']==1]
 
+print("df_minority.size", df_minority.size)
+
 # Downsample majority class
 
 df_majority_downsampled = resample(df_majority, 
@@ -171,7 +173,7 @@ undersampling_attr = numpy.array(dataset_missing.values[:,0:8])
 undersampling_label = numpy.array(dataset_missing.values[:,8])
 
 
-#exit(0)
+exit(0)
 
 print(" = 5. Evaluate Some Algorithms = ")
 # Split-out validation dataset
