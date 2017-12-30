@@ -104,12 +104,47 @@ normalized_df = pandas.DataFrame(normalized_attr)
 print(normalized_df.describe())
 
 print("standardized_attr: mean of 0 and stdev of 1")
-scaler = preproc.StandardScaler().fit(diabetes_attr)
-standardized_attr = scaler.transform(diabetes_attr)
+#scaler = preproc.StandardScaler().fit(diabetes_attr)
+#standardized_attr = scaler.transform(diabetes_attr)
+standardized_attr = preproc.scale(diabetes_attr)
 standardized_df = pandas.DataFrame(standardized_attr)
 print(standardized_df.describe())
 
 ## missing.arff
+print((dataset[['plas', 'pres', 'skin', 'test', 'mass', 'pedi', 'age']] == 0).sum())
+
+# make a copy of original data set
+dataset_cp = dataset.copy(deep=True)
+
+dataset_cp[['plas', 'pres', 'skin', 'test', 'mass']] = dataset_cp[['plas', 'pres', 'skin', 'test', 'mass']].replace(0, numpy.NaN)
+
+# print the first 10 rows of data
+print(dataset_cp.head(10))
+
+# count the number of NaN values in each column
+print(dataset_cp.isnull().sum())
+
+# drop the class attribute
+dataset_cp.drop(['class'], axis=1, inplace = True)
+
+# summarize the number of rows and columns in the dataset
+print(dataset_cp.shape)
+
+# dataset with missing values
+dataset_missing = dataset_cp.dropna()
+
+# summarize the number of rows and columns in the dataset
+print(dataset_cp.shape)
+
+missing_attr = numpy.array(dataset_missing.values)
+
+
+# fill missing values with mean column values
+dataset_impute = dataset_cp.fillna(dataset_cp.mean())
+# count the number of NaN values in each column
+print(dataset_impute.isnull().sum())
+
+impute_attr = numpy.array(dataset_impute.values)
 
 print(" = 5. Evaluate Some Algorithms = ")
 # Split-out validation dataset
@@ -128,6 +163,8 @@ datasets = []
 datasets.append(('diabetes_attr', diabetes_attr))
 datasets.append(('normalized_attr', normalized_attr))
 datasets.append(('standardized_attr', standardized_attr))
+datasets.append(('impute_attr', impute_attr))
+# datasets.append(('missing_attr', missing_attr))
 
 models = []
 models.append(('LR', LogisticRegression()))
