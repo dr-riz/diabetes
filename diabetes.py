@@ -20,7 +20,7 @@ from sklearn.model_selection import train_test_split
 
 #from sklearn.neighbors import KNeighborsClassifier
 #from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-#from sklearn.svm import SVC
+from sklearn.svm import SVC
 
 # fine tuning
 from sklearn.linear_model import Ridge
@@ -167,7 +167,7 @@ datasets.append(('impute_attr', impute_attr, label))
 datasets.append(('missing_attr', missing_attr, missing_label))
 
 models = []
-models.append(('LR', LogisticRegression()))
+models.append(('LR', LogisticRegression(class_weight='balanced')))
 models.append(('NB', GaussianNB()))
 models.append(('RF', RandomForestClassifier()))
 models.append(('DT', DecisionTreeClassifier()))
@@ -216,13 +216,20 @@ random_state=seed)
 alphas = numpy.array([1,0.1,0.01,0.001,0.0001,0])
 param_grid = dict(alpha=alphas)
 model = Ridge()
-grid = GridSearchCV(estimator=model, param_grid=param_grid)
-grid.fit(X_train, Y_train)
-print("grid.best_score=",grid.best_score_)
-print("grid.best_estimator_.alpha=",grid.best_estimator_.alpha)
+ridge = GridSearchCV(estimator=model, param_grid=param_grid)
+ridge.fit(X_train, Y_train)
+print("ridge.best_score=",ridge.best_score_)
+print("ridge.best_estimator_.alpha=",ridge.best_estimator_.alpha)
 
-#building model)
-model = Ridge(grid.best_estimator_.alpha)
+param_grid = {'C': [0.001, 0.01, 0.1, 1, 10, 100, 1000], 'penalty': ['l2','l1']}
+logr = GridSearchCV(LogisticRegression(class_weight='balanced'), param_grid)
+logr.fit(X_train, Y_train)
+print("logr.best_score=",logr.best_score_)
+print("logr.best_estimator_.C=",logr.best_estimator_.C)
+print("logr.best_estimator_.penalty=",logr.best_estimator_.penalty)
+
+#building model
+model = LogisticRegression(class_weight='balanced',C=logr.best_estimator_.C, penalty=logr.best_estimator_.penalty)
 model.fit(X_train, Y_train)
 result = model.score(X_test, Y_test) # determine r2 value
 print("score on X_test before storing=",result)
