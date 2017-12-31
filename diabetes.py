@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from sklearn import preprocessing as preproc
 import numpy
 from sklearn.utils import resample
+from sklearn.utils import shuffle
 
 # algo eval imports
 from sklearn import model_selection
@@ -19,9 +20,13 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
 
+
+
 #from sklearn.neighbors import KNeighborsClassifier
 #from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.svm import SVC
+
+from imblearn.over_sampling import SMOTE
 
 # fine tuning
 from sklearn.linear_model import Ridge
@@ -152,14 +157,14 @@ impute_attr = numpy.array(dataset_impute.values[:,0:8])
 df_majority = dataset[dataset['class']==0]
 df_minority = dataset[dataset['class']==1]
 
-print("df_minority.size", df_minority.size)
+print("df_minority['class'].size", df_minority['class'].size)
 
 # Downsample majority class
 
 df_majority_downsampled = resample(df_majority, 
-                                 replace=False,    # sample without replacement
-                                 n_samples=268,     # to match minority class
-                                 random_state=7) # reproducible results
+                          replace=False,    # sample without replacement
+                          n_samples=df_minority['class'].size,  # match minority class
+                          random_state=7) # reproducible results
  
 # Combine minority class with downsampled majority class
 df_downsampled = pandas.concat([df_majority_downsampled, df_minority])
@@ -168,12 +173,56 @@ print("undersampled", df_downsampled.groupby('class').size())
 # Display new class counts
 #df_downsampled.balance.value_counts()
 
+undersampling_attr = numpy.array(df_downsampled.values[:,0:8])
+undersampling_label = numpy.array(df_downsampled.values[:,8])
 
-undersampling_attr = numpy.array(dataset_missing.values[:,0:8])
-undersampling_label = numpy.array(dataset_missing.values[:,8])
+# oversampling
+
+#sm = SMOTE('regular')
+sm = SMOTE(random_state=7)
+x_val = dataset.values[:,0:8]
+y_val = dataset.values[:,8]
+
+print("y_val.dtype",y_val.dtype)
+
+oversampling_attr = []
+y_resampled = []
+X_res, y_res = sm.fit_sample(x_val, y_val)
+oversampling_attr.append(X_res)
+y_resampled.append(y_res)
+
+print("X_res.shape",X_res.shape, "y_res.shape",y_res.shape)
+
+#oversampled_array = numpy.concatenate((X_res, y_res[:]), axis=1)
 
 
-exit(0)
+headers=['preg', 'plas', 'pres', 'skin', 'test', 'mass', 'pedi', 'age', 'class']
+features=['preg', 'plas', 'pres', 'skin', 'test', 'mass', 'pedi', 'age']
+#oversampled_df = pandas.DataFrame(oversampled_array)
+oversampled_df = pandas.DataFrame(X_res)
+oversampled_df.columns = features
+print(oversampled_df.shape)
+print(oversampled_df.describe())
+
+oversampled_df = oversampled_df.assign(label = numpy.asarray(y_res))
+print(oversampled_df.shape)
+print(oversampled_df.describe())
+
+print(oversampled_df.tail(10))
+
+#oversampled_df = shuffle(oversampled_df)
+oversampled_df = oversampled_df.sample(frac=1).reset_index(drop=True)
+
+print(oversampled_df.tail(10))
+
+oversampling_attr = dataset.values[:,0:8]
+oversampling_label = dataset.values[:,8]
+
+#oversampled_df = pandas.DataFrame(X_res)
+
+#print("oversampled", oversampled_df.groupby(0).size()) 
+#print(oversampled_df.tail(100))
+#exit(0)
 
 print(" = 5. Evaluate Some Algorithms = ")
 # Split-out validation dataset
@@ -193,7 +242,8 @@ datasets.append(('normalized_attr', normalized_attr, label))
 datasets.append(('standardized_attr', standardized_attr, label))
 datasets.append(('impute_attr', impute_attr, label))
 datasets.append(('missing_attr', missing_attr, missing_label))
-datasets.append(('undersampling_attr', missing_attr, undersampling_label))
+datasets.append(('undersampling_attr', undersampling_attr, undersampling_label))
+datasets.append(('oversampling_attr', oversampling_attr, oversampling_label))
 
 models = []
 models.append(('LR', LogisticRegression(class_weight='balanced')))
