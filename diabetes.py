@@ -1,6 +1,4 @@
-#!/usr/bin/python
-
-print("Reproducing case study of Shvartser posted at Dr. Brownlee's machinelearningmastery.com")
+print("Reproducing and expanding case study of Shvartser posted at Dr. Brownlee's machinelearningmastery.com")
 
 # preproc imports
 import pandas
@@ -9,6 +7,7 @@ import matplotlib.pyplot as plt
 from sklearn import preprocessing as preproc
 import numpy
 from sklearn.utils import resample
+from imblearn.over_sampling import SMOTE
 
 # algo eval imports
 from sklearn import model_selection
@@ -18,14 +17,6 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
-
-
-
-#from sklearn.neighbors import KNeighborsClassifier
-#from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.svm import SVC
-
-from imblearn.over_sampling import SMOTE
 
 # fine tuning
 from sklearn.linear_model import Ridge
@@ -223,9 +214,6 @@ models.append(('LR', LogisticRegression(class_weight='balanced')))
 models.append(('NB', GaussianNB()))
 models.append(('RF', RandomForestClassifier()))
 models.append(('DT', DecisionTreeClassifier()))
-#models.append(('LDA', LinearDiscriminantAnalysis()))
-#models.append(('KNN', KNeighborsClassifier()))
-#models.append(('SVM', SVC()))
 
 print("eval metric: " + scoring)
 for dataname, attributes, target in datasets:
@@ -295,9 +283,30 @@ result = loaded_model.score(X_test, Y_test)
 
 print("score on X_test after storing=",result)
 
-prbabilities=loaded_model.predict_proba(X_test)
-print("(actual,probability) at random index=", rand_index, actual, prbabilities[0])
-#print("predictions",predictions)
-#print(accuracy_score(Y_test, predictions))
-#print(confusion_matrix(Y_test, predictions))
-#print(classification_report(Y_test, predictions))
+
+delta0_predictions=loaded_model.predict(X_test)
+print("delta0_predictions")
+print(accuracy_score(Y_test, delta0_predictions))
+print(confusion_matrix(Y_test, delta0_predictions))
+print(classification_report(Y_test, delta0_predictions))
+
+delta=0.10
+probs=loaded_model.predict_proba(X_test)
+print("loaded_model.self.classes_",loaded_model.classes_)
+if (probs[0][0] > (probs[0][1] + delta)): 
+	pred = 0
+print("at random index, (actual,probability, prediction) ", 0, Y_test[0], probs[0], pred)
+
+#predictions=probs[0][0] > (probs[0][1] + delta)
+predictions=[0 if (ins[0] > (ins[1] + delta)) else 1  for ins in probs]
+#print(predictions)
+# IF(N769>(M769+$N$776),"tested_positive","tested_negative")
+
+
+
+#print(probs.
+
+print("deltaX",delta)
+print(accuracy_score(Y_test, predictions))
+print(confusion_matrix(Y_test, predictions))
+print(classification_report(Y_test, predictions))
