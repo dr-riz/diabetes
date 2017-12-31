@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 from sklearn import preprocessing as preproc
 import numpy
 from sklearn.utils import resample
-from sklearn.utils import shuffle
 
 # algo eval imports
 from sklearn import model_selection
@@ -39,6 +38,11 @@ import math
 # build and save model using Pickle
 from random import *
 import pickle
+
+# final model
+from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import accuracy_score
 
 datafile="./diabetes.data"
 headers=['preg', 'plas', 'pres', 'skin', 'test', 'mass', 'pedi', 'age', 'class']
@@ -170,9 +174,7 @@ df_majority_downsampled = resample(df_majority,
 df_downsampled = pandas.concat([df_majority_downsampled, df_minority])
  
 print("undersampled", df_downsampled.groupby('class').size()) 
-# Display new class counts
-#df_downsampled.balance.value_counts()
-print(df_downsampled.tail(10))
+df_downsampled=df_downsampled.sample(frac=1).reset_index(drop=True)
 undersampling_attr = numpy.array(df_downsampled.values[:,0:8])
 undersampling_label = numpy.array(df_downsampled.values[:,8])
 
@@ -189,14 +191,11 @@ oversampled_df.columns = features
 oversampled_df = oversampled_df.assign(label = numpy.asarray(y_res))
 oversampled_df = oversampled_df.sample(frac=1).reset_index(drop=True)
 
-oversampling_attr = dataset.values[:,0:8]
-oversampling_label = dataset.values[:,8]
+oversampling_attr = oversampled_df.values[:,0:8]
+oversampling_label = oversampled_df.values[:,8]
 
-#oversampled_df = pandas.DataFrame(X_res)
+print("oversampled_df", oversampled_df.groupby('label').size()) 
 
-#print("oversampled", oversampled_df.groupby(0).size()) 
-#print(oversampled_df.tail(100))
-exit(0)
 
 print(" = 5. Evaluate Some Algorithms = ")
 # Split-out validation dataset
@@ -266,16 +265,8 @@ test_size = 0.33
 X_train, X_test, Y_train, Y_test = train_test_split(diabetes_attr, label, test_size=test_size,
 random_state=seed)
 
-alphas = numpy.array([1,0.1,0.01,0.001,0.0001,0])
-param_grid = dict(alpha=alphas)
-model = Ridge()
-ridge = GridSearchCV(estimator=model, param_grid=param_grid)
-ridge.fit(X_train, Y_train)
-print("ridge.best_score=",ridge.best_score_)
-print("ridge.best_estimator_.alpha=",ridge.best_estimator_.alpha)
-
 param_grid = {'C': [0.001, 0.01, 0.1, 1, 10, 100, 1000], 'penalty': ['l2','l1']}
-logr = GridSearchCV(LogisticRegression(class_weight='balanced'), param_grid, scoring='roc_auc')
+logr = GridSearchCV(LogisticRegression(class_weight='balanced'), param_grid, scoring='accuracy')
 logr.fit(X_train, Y_train)
 print("logr.best_score=",logr.best_score_)
 print("logr.best_estimator_.C=",logr.best_estimator_.C)
@@ -303,3 +294,10 @@ loaded_model = pickle.load(open(filename, 'rb'))
 result = loaded_model.score(X_test, Y_test)
 
 print("score on X_test after storing=",result)
+
+prbabilities=loaded_model.predict_proba(X_test)
+print("(actual,probability) at random index=", rand_index, actual, prbabilities[0])
+#print("predictions",predictions)
+#print(accuracy_score(Y_test, predictions))
+#print(confusion_matrix(Y_test, predictions))
+#print(classification_report(Y_test, predictions))
