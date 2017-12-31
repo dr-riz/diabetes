@@ -298,8 +298,16 @@ if (probs[0][0] > (probs[0][1] + delta)):
 print("at random index, (actual,probability, prediction) ", 0, Y_test[0], probs[0], pred)
 
 #predictions=probs[0][0] > (probs[0][1] + delta)
-predictions=[0 if (ins[0] > (ins[1] + delta)) else 1  for ins in probs]
-#print(predictions)
+report = [[ins[0], ins[1], 0] if (ins[0] > (ins[1] + delta)) else [ins[0], ins[1], 1]  for ins in probs]
+
+report_df = pandas.DataFrame(report, columns=['neg_prob','pos_prob','pred'])
+print(report_df.tail(10))
+report_df=report_df.sort_values(by=['pred','pos_prob'])
+print(report_df.tail(10))
+print(report_df.describe())
+
+predictions = numpy.array(report_df.values)[:,2]
+print(predictions)
 # IF(N769>(M769+$N$776),"tested_positive","tested_negative")
 
 
@@ -311,6 +319,17 @@ print(accuracy_score(Y_test, predictions))
 print(confusion_matrix(Y_test, predictions))
 print(classification_report(Y_test, predictions))
 
+positive_prob=numpy.array(report_df.values)[:,1]
 
-report = numpy.concatenate(probs,predictions)
-print(report)
+
+from matplotlib.legend_handler import HandlerLine2D
+
+plt.clf()
+pred_legend,=plt.plot(predictions, 'r', label="predictions") 
+prob_legend,=plt.plot(positive_prob, 'b', label="+ve probability")
+
+plt.legend(handler_map={pred_legend: HandlerLine2D(numpoints=4)})
+
+plt.show()
+
+#print report
