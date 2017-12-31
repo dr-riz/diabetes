@@ -310,3 +310,7 @@ print("deltaX",delta)
 print(accuracy_score(Y_test, predictions))
 print(confusion_matrix(Y_test, predictions))
 print(classification_report(Y_test, predictions))
+
+
+report = numpy.concatenate(probs,predictions)
+print(report)
