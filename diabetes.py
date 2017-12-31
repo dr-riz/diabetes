@@ -172,48 +172,22 @@ df_downsampled = pandas.concat([df_majority_downsampled, df_minority])
 print("undersampled", df_downsampled.groupby('class').size()) 
 # Display new class counts
 #df_downsampled.balance.value_counts()
-
+print(df_downsampled.tail(10))
 undersampling_attr = numpy.array(df_downsampled.values[:,0:8])
 undersampling_label = numpy.array(df_downsampled.values[:,8])
 
 # oversampling
 
-#sm = SMOTE('regular')
 sm = SMOTE(random_state=7)
 x_val = dataset.values[:,0:8]
 y_val = dataset.values[:,8]
-
-print("y_val.dtype",y_val.dtype)
-
-oversampling_attr = []
-y_resampled = []
 X_res, y_res = sm.fit_sample(x_val, y_val)
-oversampling_attr.append(X_res)
-y_resampled.append(y_res)
 
-print("X_res.shape",X_res.shape, "y_res.shape",y_res.shape)
-
-#oversampled_array = numpy.concatenate((X_res, y_res[:]), axis=1)
-
-
-headers=['preg', 'plas', 'pres', 'skin', 'test', 'mass', 'pedi', 'age', 'class']
 features=['preg', 'plas', 'pres', 'skin', 'test', 'mass', 'pedi', 'age']
-#oversampled_df = pandas.DataFrame(oversampled_array)
 oversampled_df = pandas.DataFrame(X_res)
 oversampled_df.columns = features
-print(oversampled_df.shape)
-print(oversampled_df.describe())
-
 oversampled_df = oversampled_df.assign(label = numpy.asarray(y_res))
-print(oversampled_df.shape)
-print(oversampled_df.describe())
-
-print(oversampled_df.tail(10))
-
-#oversampled_df = shuffle(oversampled_df)
 oversampled_df = oversampled_df.sample(frac=1).reset_index(drop=True)
-
-print(oversampled_df.tail(10))
 
 oversampling_attr = dataset.values[:,0:8]
 oversampling_label = dataset.values[:,8]
@@ -222,7 +196,7 @@ oversampling_label = dataset.values[:,8]
 
 #print("oversampled", oversampled_df.groupby(0).size()) 
 #print(oversampled_df.tail(100))
-#exit(0)
+exit(0)
 
 print(" = 5. Evaluate Some Algorithms = ")
 # Split-out validation dataset
