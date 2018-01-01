@@ -13,10 +13,12 @@ from imblearn.over_sampling import SMOTE
 from sklearn import model_selection
 from sklearn.metrics import accuracy_score
 from sklearn.linear_model import LogisticRegression
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import GaussianNB
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
 
 # fine tuning
 from sklearn.linear_model import Ridge
@@ -31,6 +33,7 @@ from random import *
 import pickle
 
 # final model
+from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import accuracy_score
@@ -65,46 +68,34 @@ print(dataset.groupby('class').size())
 print(" = 4. Data Visualization = ")
 # box and whisker plots
 print(" == 4.1 Univariate Plots: box and whisker plots. why? to determine outliers? = ")
-#dataset.plot(kind='box', subplots=True, layout=(2,4), sharex=False, sharey=False)
-#plt.show()
+dataset.plot(kind='box', subplots=True, layout=(3,3), sharex=False, sharey=False)
+plt.show()
 
 # histograms
 print(" == 4.1 Univariate Plots: histograms. why? to determine if the distribution is normal-like? == ")
-#dataset.hist()
-#plt.show()
+dataset.hist()
+plt.show()
 
 # scatter plot matrix
 print("== 4.2 Multivariate Plots: Multivariate Plots:scatter plot matrix. why? to spot structured relationships between input variables ==")
-#scatter_matrix(dataset)
-#plt.show()
+scatter_matrix(dataset)
+plt.show()
 
 numpy.set_printoptions(precision=3)
 array = numpy.array(dataset.values)
-#array = dataset.values
 
-#datasets
-## x diabetes.arff -- unchanged, original
-## x normalized.arff
-## x standardized.arff
-## discretize.arff
-## x missing.arff (ambigious)
-## x remove_missing.arff:
-## x replaced_missing.arff:
-## square.arff
-## oversampling
-## undersampling
+print("== 4.a Generating data sets ==")
 
 print("diabetes_attr: unchanged, original attributes")
 diabetes_attr = array[:,0:8]
 label = array[:,8] #unchanged across preprocessing?
 diabetes_df = pandas.DataFrame(diabetes_attr)
 
-
 print("normalized_attr: range of 0 to 1")
 scaler = preproc.MinMaxScaler().fit(diabetes_attr)
 normalized_attr = scaler.transform(diabetes_attr)
 normalized_df = pandas.DataFrame(normalized_attr)
-print(normalized_df.describe())
+#print(normalized_df.describe())
 
 print("standardized_attr: mean of 0 and stdev of 1")
 #scaler = preproc.StandardScaler().fit(diabetes_attr)
@@ -113,9 +104,13 @@ standardized_attr = preproc.scale(diabetes_attr)
 standardized_df = pandas.DataFrame(standardized_attr)
 print(standardized_df.describe())
 
-## missing.arff
-print((dataset[['plas', 'pres', 'skin', 'test', 'mass', 'pedi', 'age']] == 0).sum())
 
+print("== 4.b treating missing values by purging or imputating ==")
+## missing.arff
+print("=== Assuming, zero indicates missing values === ")
+print("missing values by count")
+print((dataset[['plas', 'pres', 'skin', 'test', 'mass', 'pedi', 'age']] == 0).sum())
+print("=== purging ===")
 # make a copy of original data set
 dataset_cp = dataset.copy(deep=True)
 
@@ -127,9 +122,6 @@ print(dataset_cp.head(10))
 # count the number of NaN values in each column
 print(dataset_cp.isnull().sum())
 
-# summarize the number of rows and columns in the dataset
-print(dataset_cp.shape)
-
 # dataset with missing values
 dataset_missing = dataset_cp.dropna()
 
@@ -139,15 +131,18 @@ print(dataset_cp.shape)
 missing_attr = numpy.array(dataset_missing.values[:,0:8])
 missing_label = numpy.array(dataset_missing.values[:,8])
 
+print("=== imputing by replacing missing values with mean column values ===")
 
-# fill missing values with mean column values
 dataset_impute = dataset_cp.fillna(dataset_cp.mean())
 # count the number of NaN values in each column
 print(dataset_impute.isnull().sum())
 
+print("== 4.c addressing class imbalance under or over sampling ==")
+
 impute_attr = numpy.array(dataset_impute.values[:,0:8])
 
-#undersampling
+print("=== undersampling majority class by purging ===")
+
 # Separate majority and minority classes
 df_majority = dataset[dataset['class']==0]
 df_minority = dataset[dataset['class']==1]
@@ -169,7 +164,7 @@ df_downsampled=df_downsampled.sample(frac=1).reset_index(drop=True)
 undersampling_attr = numpy.array(df_downsampled.values[:,0:8])
 undersampling_label = numpy.array(df_downsampled.values[:,8])
 
-# oversampling
+print("=== oversampling minority class with SMOTE ===")
 
 sm = SMOTE(random_state=7)
 x_val = dataset.values[:,0:8]
@@ -210,10 +205,13 @@ datasets.append(('undersampling_attr', undersampling_attr, undersampling_label))
 datasets.append(('oversampling_attr', oversampling_attr, oversampling_label))
 
 models = []
-models.append(('LR', LogisticRegression(class_weight='balanced')))
+models.append(('LR', LogisticRegression()))
+models.append(('LDA', LinearDiscriminantAnalysis()))
+models.append(('KNN', KNeighborsClassifier()))
+models.append(('CART', DecisionTreeClassifier()))
 models.append(('NB', GaussianNB()))
 models.append(('RF', RandomForestClassifier()))
-models.append(('DT', DecisionTreeClassifier()))
+models.append(('SVM', SVC()))
 
 print("eval metric: " + scoring)
 for dataname, attributes, target in datasets:
@@ -245,8 +243,9 @@ for dataname, attributes, target in datasets:
 	fig.suptitle('Algorithm Comparison for ' + dataname)
 	ax = fig.add_subplot(111) # what does 111 mean?
 	plt.boxplot(results)
+	plt.ylabel(scoring)
 	ax.set_xticklabels(names)
-	#plt.show()
+	plt.show()
 
 
 test_size = 0.33
@@ -308,11 +307,6 @@ print(report_df.describe())
 
 predictions = numpy.array(report_df.values)[:,2]
 print(predictions)
-# IF(N769>(M769+$N$776),"tested_positive","tested_negative")
-
-
-
-#print(probs.
 
 print("deltaX",delta)
 print(accuracy_score(Y_test, predictions))
@@ -325,11 +319,10 @@ positive_prob=numpy.array(report_df.values)[:,1]
 from matplotlib.legend_handler import HandlerLine2D
 
 plt.clf()
-pred_legend,=plt.plot(predictions, 'r', label="predictions") 
+pred_legend,=plt.plot(predictions, 'r', label="prediction") 
 prob_legend,=plt.plot(positive_prob, 'b', label="+ve probability")
 
 plt.legend(handler_map={pred_legend: HandlerLine2D(numpoints=4)})
+plt.xlabel('instance#')
 
 plt.show()
-
-#print report
