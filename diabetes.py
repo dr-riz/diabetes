@@ -2,7 +2,7 @@ print("Reproducing and expanding case study of Shvartser posted at Dr. Brownlee'
 
 # preproc imports
 import pandas
-from pandas.tools.plotting import scatter_matrix
+from pandas.plotting import scatter_matrix
 import matplotlib.pyplot as plt
 from sklearn import preprocessing as preproc
 import numpy
@@ -192,7 +192,6 @@ print(" == 5.2 Test Harness: Test options and evaluation metric == ")
 seed = 7
 scoring = 'accuracy'
 
-
 # Spot Check Algorithms
 print("== 5.3 Build Models: build and evaluate our five models, Spot Check Algorithms ==")
 datasets = []
@@ -280,41 +279,34 @@ pickle.dump(model, open(filename, 'wb'))
 loaded_model = pickle.load(open(filename, 'rb')) 
 result = loaded_model.score(X_test, Y_test)
 
-print("score on X_test after storing=",result)
-
+print("score on X_test after loading=",result)
 
 delta0_predictions=loaded_model.predict(X_test)
 print("delta0_predictions")
-print(accuracy_score(Y_test, delta0_predictions))
-print(confusion_matrix(Y_test, delta0_predictions))
-print(classification_report(Y_test, delta0_predictions))
+print("accuracy_score=",accuracy_score(Y_test, delta0_predictions))
+print("confusion_matrix",confusion_matrix(Y_test, delta0_predictions))
+print("classification_report",classification_report(Y_test, delta0_predictions))
 
-delta=0.10
+delta=0.40
 probs=loaded_model.predict_proba(X_test)
 print("loaded_model.self.classes_",loaded_model.classes_)
 if (probs[0][0] > (probs[0][1] + delta)): 
 	pred = 0
 print("at random index, (actual,probability, prediction) ", 0, Y_test[0], probs[0], pred)
 
-#predictions=probs[0][0] > (probs[0][1] + delta)
-report = [[ins[0], ins[1], 0] if (ins[0] > (ins[1] + delta)) else [ins[0], ins[1], 1]  for ins in probs]
+report = [[ins[0], ins[1], 0] if ((ins[0]+delta) > ins[1]) else [ins[0], ins[1], 1]  for ins in probs]
 
 report_df = pandas.DataFrame(report, columns=['neg_prob','pos_prob','pred'])
-print(report_df.tail(10))
 report_df=report_df.sort_values(by=['pred','pos_prob'])
-print(report_df.tail(10))
-print(report_df.describe())
 
 predictions = numpy.array(report_df.values)[:,2]
-print(predictions)
 
 print("deltaX",delta)
-print(accuracy_score(Y_test, predictions))
+print("accuracy_score=",accuracy_score(Y_test, predictions))
 print(confusion_matrix(Y_test, predictions))
 print(classification_report(Y_test, predictions))
 
 positive_prob=numpy.array(report_df.values)[:,1]
-
 
 from matplotlib.legend_handler import HandlerLine2D
 
@@ -324,5 +316,6 @@ prob_legend,=plt.plot(positive_prob, 'b', label="+ve probability")
 
 plt.legend(handler_map={pred_legend: HandlerLine2D(numpoints=4)})
 plt.xlabel('instance#')
+plt.ylabel('magnitude(0-1)')
 
 plt.show()
