@@ -261,7 +261,7 @@ print("logr.best_estimator_.penalty=",logr.best_estimator_.penalty)
 
 #building model
 model = LogisticRegression(class_weight='balanced',C=logr.best_estimator_.C, penalty=logr.best_estimator_.penalty)
-model.fit(X_train, Y_train)
+model.fit(diabetes_attr, label)
 result = model.score(X_test, Y_test) # determine r2 value
 print("score on X_test before storing=",result)
 
