@@ -1,40 +1,42 @@
 # diabetes
-Analysing Pima Indians Diabetes Data Set with Weka
+Analysing Pima Indians Diabetes dataset with Weka and Python
+
+## Reproducing/Expanding in Weka
 
 ### Abstract
 Reproducing case study of Shvartser [1] posted at Dr. Brownlee's comprehensive ML learning website [2].
 
 - Reproducing the study and explicitly stating the filters used
 - Expanding on the case study by:
-* balancing classes by over and under sampling minority and majority classes, respectively
-* annotating predictions with probabilities
-* exercising control over probability threshold to reduce false negatives at the cost of false positives
+	* balancing classes by over and under sampling minority and majority classes, respectively
+	* annotating predictions with probabilities
+	* exercising control over probability threshold to reduce false negatives at the cost of false positives
 
 ### Reproducing
 In part 1 of the case study, The case study claims that "Larger values of plas combined with larger values for age, pedi, mass, insu, skin, pres, and preg tends to show greater likelihood of testing positive for diabetes."
 
 I don't see much likelihood from the scatter plot. Both positive and negative data points for the said attributes overlap for the most part.
 
-The data sets are reproduced with the following filters:
-1. diabetes.arff: original unchanged data set.
+The datasets are reproduced with the following filters:
+1. diabetes.arff: original unchanged dataset.
 2. discretize.arff: supervised.attribute.Discretize
-3. missing.arff: It is ambiguous which filter was applied to generate this data set in the case study, so I skip this file. Instead, I provide further treament in (5) and (6).
+3. missing.arff: It is ambiguous which filter was applied to generate this dataset in the case study, so I skip this file. Instead, I provide further treament in (5) and (6).
 4. normalized.arff: unsupervised.attribute.Normalize on all attributes. Not applied on the class, which is nominal anyways.
-5. remove_missing.arff: Fellow user (credits due) at The UCI ML repository [3,4] observes there are zeros in places where they are biologically impossible, such as the blood pressure. They are likely missing values. I further checked the remaining attributes. Except pregnancy, they either cannot be zero (e.g. mass) or don't have zero (e.g. pedigree). In the former case, I assume zero indicates missing values, and use Dr. Brownlee's post [5] to remove the missing values. This reduces the number of instances from 768 to 392. Needless to say, this purges data set by half.
+5. remove_missing.arff: Fellow user (credits due) at The UCI ML repository [3,4] observes there are zeros in places where they are biologically impossible, such as the blood pressure. They are likely missing values. I further checked the remaining attributes. Except pregnancy, they either cannot be zero (e.g. mass) or don't have zero (e.g. pedigree). In the former case, I assume zero indicates missing values, and use Dr. Brownlee's post [1] to remove the missing values. This reduces the number of instances from 768 to 392. Needless to say, this purges dataset by half.
 6. replaced_missing.arff: Following on comment on (5), I again use Brownlee's post [5] to replace the missing values with the mean of the attribute value. 
 7. square.arff: <TBD> 
 8. standardized.arff: unsupervised.attribute.Standardize
 
-With these data sets, I have been able to reproduce the Weka Experiment in part 2. I added one more algorithm for establishing a baseline namely, ZeroR. The numbers are highly similar as reported by Shvartser [5]. We have considered both linear, e.g. Logistic Regression (LR), and non-linear, e.g. Random Forest (RF), classifiers. We also see that their evaluation metrics are not statistically different. In such a case, linear model is preferable and I use LR for further analysis.
+With these datasets, I have been able to reproduce the Weka Experiment in part 2. I added one more algorithm for establishing a baseline namely, ZeroR. The numbers are highly similar as reported by Shvartser [5]. We have considered both linear, e.g. Logistic Regression (LR), and non-linear, e.g. Random Forest (RF), classifiers. We also see that their evaluation metrics are not statistically different. In such a case, linear model is preferable and I use LR for further analysis.
 
 ### Expansion
 
-Now, the case study rightly notices that there is class imbalance: 65% -ve, and 35% +ve. In part 2, I am unsure if the class was balanced in cross validation. In the interest of reproducing the study, I do not balance the classes for the above data sets, namely (1-8). As you may know, class imbalance leads to a majority classifier, and we see this artifact when ZeroR gives us about 65% accuracy. To balance the classes, I generate two data sets:
+Now, the case study rightly notices that there is class imbalance: 65% -ve, and 35% +ve. In part 2, I am unsure if the class was balanced in cross validation. In the interest of reproducing the study, I do not balance the classes for the above datasets, namely (1-8). As you may know, class imbalance leads to a majority classifier, and we see this artifact when ZeroR gives us about 65% accuracy. To balance the classes, I generate two additional datasets:
 
-9. oversampling.arff: increases the number of minority class (+ve) instances by a specified percentage. I specify the default of 100%, and that increases the number of +ve instances to be at par with the majority class (-ve) instances. I applied the SMOTE and Randomize filters in that order. The total instance count becomes 1,036. This mildly contaminates the pure data samples with synthethic ones. See Shams youtube for step-by-step method for applying SMOTE and Randomize fileters [7]. 
-10. undersampling.arff: I use SpreadsubSample and Randomize fileters in that order to reduce the number of majority class instances to be at par with minority class instances, namely 268. The total number of instances are now 536. Again, see Shams second video [8] for step-by-step procedure. This method removes valuable instances of the majority class. 
+9. oversampling.arff: increases the number of minority class (+ve) instances by a specified percentage. I specify the default of 100%, and that increases the number of +ve instances to be at par with the majority class (-ve) instances. I applied the SMOTE and Randomize filters in that order. The total instance count becomes 1,036. This mildly contaminates the pure data samples with synthethic ones. See Shams youtube for step-by-step method for applying SMOTE and Randomize filters [7]. 
+10. undersampling.arff: I use SpreadsubSample and Randomize filters in that order to reduce the number of majority class instances to be at par with minority class instances, namely 268. The total number of instances are now 536. Again, see Shams second video [8] for step-by-step procedure. This method removes valuable instances of the majority class. 
 
-Intuitively, acquiring additional instances is likely to be more than undersampling the majority class or just oversampling the minority class.
+Intuitively, acquiring additional instances is likely to be more effective than undersampling the majority class or just oversampling the minority class.
 
 The accuracy or percent_correct in the Weka Experiment are stated below:
 
@@ -47,7 +49,7 @@ undersampling.arff  	49.62 |   73.73 v
 
 where v represents the statistical difference.
 
-Note, the accuracy of ZeroR dropped to about 50% as anticipated. The accuracy of LR is still close to our previous best. Determining statistical significance of accuracies for LR across the data sets is still outstanding. 
+Note, the accuracy of ZeroR dropped to about 50% as anticipated. The accuracy of LR is still close to our previous best. Determining statistical significance of accuracies for LR across the datasets is still outstanding. 
 
 Next, the Area under ROC in the Weka Experiment are stated below:
 
@@ -63,11 +65,11 @@ Finally, the F-Measures in the Weka Experiment are stated below:
 <pre>
 Dataset        		   ZeroR |   LR 
 diabetes.arff       	0.79 |   0.83 v
-oversampling.arff   	0.00 |   0.75 v
+oversampling.arff       0.00^|   0.75 v
 undersampling.arff  	0.50 |   0.74 v
 </pre>
 
-Note, F-Measure of ZeroR for oversampling is 0.00. This seems incorrect, and is different (0.446) to the same metric, algorithm and data set in Weka Explorer.
+^Note, F-Measure of ZeroR for oversampling is 0.00. This seems incorrect, and is different (0.446) to the same metric, algorithm and dataset in Weka Explorer.
 
 ### Controlling the number of false negatives
 
@@ -89,7 +91,7 @@ inst#,actual,predicted,error,neg_prob,pos_prob
 the * sign indicates the probability of the predicted class. 
 the + sign indicate an incorrect prediction.
 
-Whichever class has the highest probability i.e. greater than 0.5 is the predicted class. The confusion matrix for building LR across the whole data set:
+Whichever class has the highest probability i.e. greater than 0.5 is the predicted class. The confusion matrix for building LR across the whole dataset:
 
 <pre>
 === Confusion Matrix ===
@@ -104,14 +106,43 @@ I did a work around by building on pred.csv file. At the bottom of diabetes_proc
 
 I invite you to change the value of delta to see the effects on the chart and the confusion matrix. The value of false negatives reduces from 112 to 84 when the delta value is reduced from zero to -0.10. As a side effect, false positives also increase from 69 to 94 with this delta change.
 
-Conclusions
-My thoughts are Weka Explorer and Experimenter are excellent tools to get quick and dirty analysis with algorithms and data sets without writing code. For run time changes and further fine tuning, coding seems necessary.
+### Conclusions
+My thoughts are Weka Explorer and Experimenter are excellent tools to get quick and dirty analysis with algorithms and datasets without writing code. For run time changes and further fine tuning, coding seems necessary.
 
 ### Outstanding
 - So far, we have prepared and identified which datasets and algorithms seem most suitable. An actual model to generate predictions is pending. I see that as a simple exercise, and is documented in the lesson 14 of the 14-day mini course on Weka [10].
+- Determining statistical significance of accuracies for LR across the datasets is still outstanding.
 
-### Future Work
-- Reproduce the above work in Python
+## Reproducing/Expanding in Python
+
+After reproducing and expanding the case study in Weka, I decided to reproduce them in Python. Reasons:
+- I have developed understanding of the problem
+- Weka case will serve as a baseline for comparison
+- I want to get an idea on the amount of effort and flexibility both platforms provide on the same problem
+
+For the warm up, I worked through Dr. Brownlee's "Your First Machine Learning Project in Python Step-By-Step" [11]. I wrote up the code with headings to allow the follower of the output to see what is going on.
+
+In addition to my expansion of Weka case study, the Python case study expands the case study further:
+- additional algorithms for spot checking
+- grid search on the parameters
+- saving and loading of model
+
+### Reproducing & Expansion
+
+Similar to Python Step-By-Step [11], I summarize and visualize the datasets, generating plots where possible.
+
+In contrast to creating different files for each datasets, I store the datasets in memory. I rescale the data, both normalization and standardization as suggested in the post [12]. I observe that that the mean and standard deviation are very close to zero and one, respectively, but not exactly. I posted this as a question on the blog [12], and assume that these close-enough values are acceptable in the community and move forward.
+
+I feed the dataset to the algorithms.  For each dataset, a comparison plot is generated, where each algorithm performance is drawn using a box plot.
+
+While not too worried about the average accuracy value being different, I notice the plaforms are reporting differences in the statistical significance. This merits further investigation.
+
+Nonetheless, the algorithms have similar performance. One exception is SVM, which has consistently lower accuracy. The algorithms are instantiated with their default parameters, arguably sufficient for the first run. They contain both linear (LR and LDA) and nonlinear (KNN, CART, NB etc.) algorithms. In all the cases, I see that LR performs well with high accuracy either LR has the highest accuracy or statistically insignificant to others having higher accuracy. 
+
+
+ ht
+
+
 
 
 ### References
@@ -126,4 +157,6 @@ My thoughts are Weka Explorer and Experimenter are excellent tools to get quick 
 [8] https://www.youtube.com/watch?v=ocOlm73HeNs
 [9] https://social.msdn.microsoft.com/Forums/azure/en-US/71d0efe7-4de0-4434-a4a6-5c27af876c1b/smote-consequences-a-question-and-an-alternative?forum=MachineLearning
 [10] https://machinelearningmastery.com/applied-machine-learning-weka-mini-course/
+[11] https://machinelearningmastery.com/machine-learning-in-python-step-by-step/
+[12] https://machinelearningmastery.com/rescaling-data-for-machine-learning-in-python-with-scikit-learn/#comment-425333
 </pre>

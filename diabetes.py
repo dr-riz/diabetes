@@ -37,6 +37,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import roc_curve, auc
 
 datafile="./diabetes.data"
 headers=['preg', 'plas', 'pres', 'skin', 'test', 'mass', 'pedi', 'age', 'class']
@@ -46,7 +47,6 @@ print(" = 3. Summarize the Dataset = ")
 # shape
 print(" == 3.1 Dimensions of Dataset, shape of data == ")
 print(dataset.shape)
-
 
 # head
 print(" == 3.2 Peek at the Data, head -- first 10 items == ")
@@ -284,8 +284,17 @@ print("score on X_test after loading=",result)
 delta0_predictions=loaded_model.predict(X_test)
 print("delta0_predictions")
 print("accuracy_score=",accuracy_score(Y_test, delta0_predictions))
-print("confusion_matrix",confusion_matrix(Y_test, delta0_predictions))
+tn, fp, fn, tp=confusion_matrix(Y_test, delta0_predictions).ravel()
+print("tn, fp, fn, tp:", tn, fp, fn, tp)
+sensitivity_tpr = float(tp)/(float(tp)+float(fp))
+specificity_tnr = float(tn)/(float(tn)+float(fp))
+print("sensitivity_tpr,specificity_tnr:", sensitivity_tpr,specificity_tnr)
 print("classification_report",classification_report(Y_test, delta0_predictions))
+
+delta0_probs=loaded_model.predict_proba(X_test)
+fpr, tpr, thresholds = roc_curve(Y_test, delta0_probs[:, 1])
+roc_auc = auc(fpr, tpr)
+print("delta0_roc_auc:", roc_auc)
 
 delta=0.40
 probs=loaded_model.predict_proba(X_test)
@@ -303,8 +312,16 @@ predictions = numpy.array(report_df.values)[:,2]
 
 print("deltaX",delta)
 print("accuracy_score=",accuracy_score(Y_test, predictions))
-print(confusion_matrix(Y_test, predictions))
+tn, fp, fn, tp=confusion_matrix(Y_test, predictions).ravel()
+print("confusion_matrix: tn, fp, fn, tp:", tn, fp, fn, tp)
+sensitivity_tpr = float(tp)/(float(tp)+float(fp))
+specificity_tnr = float(tn)/(float(tn)+float(fp))
+print("sensitivity_tpr,specificity_tnr:", sensitivity_tpr,specificity_tnr) 
 print(classification_report(Y_test, predictions))
+
+fpr, tpr, thresholds = roc_curve(Y_test, probs[:, 1])
+roc_auc = auc(fpr, tpr)
+print("roc_auc:", roc_auc)
 
 positive_prob=numpy.array(report_df.values)[:,1]
 
