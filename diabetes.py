@@ -260,7 +260,7 @@ print("logr.best_estimator_.penalty=",logr.best_estimator_.penalty)
 
 #building model
 model = LogisticRegression(class_weight='balanced',C=logr.best_estimator_.C, penalty=logr.best_estimator_.penalty)
-model.fit(diabetes_attr, label)
+y_score = model.fit(diabetes_attr, label)
 result = model.score(X_test, Y_test) # determine r2 value
 print("score on X_test before storing=",result)
 
@@ -289,12 +289,26 @@ print("tn, fp, fn, tp:", tn, fp, fn, tp)
 sensitivity_tpr = float(tp)/(float(tp)+float(fp))
 specificity_tnr = float(tn)/(float(tn)+float(fp))
 print("sensitivity_tpr,specificity_tnr:", sensitivity_tpr,specificity_tnr)
-print("classification_report",classification_report(Y_test, delta0_predictions))
+print(classification_report(Y_test, delta0_predictions))
+
 
 delta0_probs=loaded_model.predict_proba(X_test)
 fpr, tpr, thresholds = roc_curve(Y_test, delta0_probs[:, 1])
 roc_auc = auc(fpr, tpr)
 print("delta0_roc_auc:", roc_auc)
+
+plt.figure()
+lw = 2
+plt.plot(fpr, tpr, color='darkorange',
+         lw=lw, label='ROC curve (area = %0.2f)' % roc_auc)
+plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Positive Test ROC')
+plt.legend(loc="lower right")
+plt.show()
 
 delta=0.40
 probs=loaded_model.predict_proba(X_test)
@@ -303,7 +317,7 @@ if (probs[0][0] > (probs[0][1] + delta)):
 	pred = 0
 print("at random index, (actual,probability, prediction) ", 0, Y_test[0], probs[0], pred)
 
-report = [[ins[0], ins[1], 0] if ((ins[0]+delta) > ins[1]) else [ins[0], ins[1], 1]  for ins in probs]
+report = [[ins[0], ins[1], 0] if (ins[0] > (ins[1]+delta)) else [ins[0], ins[1], 1]  for ins in probs]
 
 report_df = pandas.DataFrame(report, columns=['neg_prob','pos_prob','pred'])
 report_df=report_df.sort_values(by=['pred','pos_prob'])
@@ -322,6 +336,19 @@ print(classification_report(Y_test, predictions))
 fpr, tpr, thresholds = roc_curve(Y_test, probs[:, 1])
 roc_auc = auc(fpr, tpr)
 print("roc_auc:", roc_auc)
+
+plt.figure()
+lw = 2
+plt.plot(fpr, tpr, color='blue',
+         lw=lw, label='ROC curve (area = %0.2f)' % roc_auc)
+plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Positive Test ROC')
+plt.legend(loc="lower right")
+plt.show()
 
 positive_prob=numpy.array(report_df.values)[:,1]
 
