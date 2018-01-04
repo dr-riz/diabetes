@@ -289,7 +289,7 @@ print("tn, fp, fn, tp:", tn, fp, fn, tp)
 sensitivity_tpr = float(tp)/(float(tp)+float(fp))
 specificity_tnr = float(tn)/(float(tn)+float(fp))
 print("sensitivity_tpr,specificity_tnr:", sensitivity_tpr,specificity_tnr)
-print(classification_report(Y_test, delta0_predictions))
+print(	classification_report(Y_test, delta0_predictions))
 
 
 delta0_probs=loaded_model.predict_proba(X_test)
@@ -310,49 +310,50 @@ plt.title('Positive Test ROC')
 plt.legend(loc="lower right")
 plt.show()
 
-delta=0.40
-probs=loaded_model.predict_proba(X_test)
-print("loaded_model.self.classes_",loaded_model.classes_)
-if (probs[0][0] > (probs[0][1] + delta)): 
-	pred = 0
-print("at random index, (actual,probability, prediction) ", 0, Y_test[0], probs[0], pred)
-
-report = [[ins[0], ins[1], 0] if (ins[0] > (ins[1]+delta)) else [ins[0], ins[1], 1]  for ins in probs]
-
-report_df = pandas.DataFrame(report, columns=['neg_prob','pos_prob','pred'])
-report_df=report_df.sort_values(by=['pred','pos_prob'])
-
-predictions = numpy.array(report_df.values)[:,2]
-
-print("deltaX",delta)
-print("accuracy_score=",accuracy_score(Y_test, predictions))
-tn, fp, fn, tp=confusion_matrix(Y_test, predictions).ravel()
-print("confusion_matrix: tn, fp, fn, tp:", tn, fp, fn, tp)
-sensitivity_tpr = float(tp)/(float(tp)+float(fp))
-specificity_tnr = float(tn)/(float(tn)+float(fp))
-print("sensitivity_tpr,specificity_tnr:", sensitivity_tpr,specificity_tnr) 
-print(classification_report(Y_test, predictions))
-
-fpr, tpr, thresholds = roc_curve(Y_test, probs[:, 1])
-roc_auc = auc(fpr, tpr)
-print("roc_auc:", roc_auc)
-
-plt.figure()
-lw = 2
-plt.plot(fpr, tpr, color='blue',
-         lw=lw, label='ROC curve (area = %0.2f)' % roc_auc)
-plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
-plt.xlim([0.0, 1.0])
-plt.ylim([0.0, 1.05])
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-plt.title('Positive Test ROC')
-plt.legend(loc="lower right")
-plt.show()
-
-positive_prob=numpy.array(report_df.values)[:,1]
+	delta=-0.40
+delta_range=[-.4, -.3, -.2, -.1, 0, .1, .2, .3, .4]
+i=0
+sensitivity_tpr=[0.0] * len(delta_range)
+specificity_tnr=[0.0] * len(delta_range)
+#sensitivity=0.0
+#specificity=0.0
+for delta in delta_range:	
+	#print("deltaX",delta)
+	probs=loaded_model.predict_proba(X_test)
+	#print("loaded_model.self.classes_",loaded_model.classes_)
+	report = [[ins[0], ins[1], 1] if (ins[1] > (ins[0]+delta)) else [ins[0], ins[1], 0] for ins in probs]
+	report_df = pandas.DataFrame(report, columns=['neg_prob','pos_prob','pred'])
+	predictions = numpy.array(report_df.values)[:,2]
+#	print("deltaX",delta)
+#	print("accuracy_score=",accuracy_score(Y_test, predictions))
+	tn, fp, fn, tp=confusion_matrix(Y_test, predictions).ravel()
+#	print("confusion_matrix: tn, fp, fn, tp:", tn, fp, fn, tp)
+	sensitivity_tpr[i]= float(tp)/(float(tp)+float(fn))
+	specificity_tnr[i]= float(tn)/(float(tn)+float(fp))
+	print("deltaX,sensitivity_tpr,specificity_tnr:", delta, sensitivity_tpr[i],specificity_tnr[i]) 
+	#print(classification_report(Y_test, predictions))
+	i=i+1
 
 from matplotlib.legend_handler import HandlerLine2D
+
+plt.clf()
+pred_legend,=plt.plot(sensitivity_tpr, 'r', label="sensitivity") 
+prob_legend,=plt.plot(specificity_tnr, 'b', label="specificity")
+
+plt.legend(handler_map={pred_legend: HandlerLine2D(numpoints=4)})
+plt.xlabel('delta')
+plt.ylabel('magnitude(0-1)')
+xi = [i for i in range(0, len(delta_range))]
+plt.xticks(xi, delta_range)
+plt.show()
+
+
+
+report_df=report_df.sort_values(by=['pred','pos_prob'])
+predictions = numpy.array(report_df.values)[:,2]
+positive_prob=numpy.array(report_df.values)[:,1]
+
+
 
 plt.clf()
 pred_legend,=plt.plot(predictions, 'r', label="prediction") 
