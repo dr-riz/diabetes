@@ -332,17 +332,11 @@ for delta in delta_range:
 from matplotlib.legend_handler import HandlerLine2D
 
 plt.clf()
-pred_legend,=plt.plot(delta_range, sensitivity_tpr, 'r', label="sensitivity") 
-prob_legend,=plt.plot(delta_range, specificity_tnr, 'b', label="specificity")
-#plt.xlim(delta_range)
-#plt.ylim([0.0, 1.05])
+pred_legend,=plt.plot(delta_range, sensitivity_tpr, 'r', marker='x', label="sensitivity,tpr") 
+prob_legend,=plt.plot(delta_range, specificity_tnr, 'b', linestyle='--', marker='o', label="specificity,tnr")
 plt.legend(handler_map={pred_legend: HandlerLine2D(numpoints=4)})
 plt.xlabel('delta')
-plt.ylabel('magnitude(0-1)')
-xi = [i for i in range(0, len(delta_range))]
-#plt.xticks(xi, delta_range)
-#plt.axis(delta_range)
-
+plt.ylabel('rate(0-1)')
 plt.show()
 
 
