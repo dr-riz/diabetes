@@ -106,9 +106,6 @@ I did a work around by building on pred.csv file. At the bottom of diabetes_proc
 
 I invite you to change the value of delta to see the effects on the chart and the confusion matrix. The value of false negatives reduces from 112 to 84 when the delta value is reduced from zero to -0.10. As a side effect, false positives also increase from 69 to 94 with this delta change.
 
-### Conclusions
-My thoughts are Weka Explorer and Experimenter are excellent tools to get quick and dirty analysis with algorithms and datasets without writing code. For run time changes and further fine tuning, coding seems necessary.
-
 ### Outstanding
 - So far, we have prepared and identified which datasets and algorithms seem most suitable. An actual model to generate predictions is pending. I see that as a simple exercise, and is documented in the lesson 14 of the 14-day mini course on Weka [10].
 - Determining statistical significance of accuracies for LR across the datasets is still outstanding.
@@ -165,14 +162,14 @@ Recall, we want to exercise control over false negatives by adjusting the value 
 
 I draw a plot show the changing values of sensitivity and specificity with each delta value. From the plot, it can be seen that sensitivity and specificity cross when delta is about 0.026. The rate value of sensitivity and specificity is about 0.76. We have reproduced the result of the paper by LR. In the shell output, we can also see that false negative (fn) increase when the value of delta increases. 
 
-('deltaX,sensitivity_tpr,specificity_tnr:', -0.02, 0.7717391304347826, 0.7407407407407407)
-('confusion_matrix: tn, fp, fn, tp:', 120, 42, *21*, 71)
+- ('deltaX,sensitivity_tpr,specificity_tnr:', -0.02, 0.7717391304347826, 0.7407407407407407)
+- ('confusion_matrix: tn, fp, fn, tp:', 120, 42, *21*, 71)
 ...
-('deltaX,sensitivity_tpr,specificity_tnr:', 0.06, 0.7391304347826086, 0.7654320987654321)
-('confusion_matrix: tn, fp, fn, tp:', 124, 38, *24*, 68)
+- ('deltaX,sensitivity_tpr,specificity_tnr:', 0.06, 0.7391304347826086, 0.7654320987654321)
+- ('confusion_matrix: tn, fp, fn, tp:', 124, 38, *24*, 68)
 ...
-('deltaX,sensitivity_tpr,specificity_tnr:', 0.12, 0.717391304347826, 0.7777777777777778)
-('confusion_matrix: tn, fp, fn, tp:', 126, 36, *26*, 66)
+- ('deltaX,sensitivity_tpr,specificity_tnr:', 0.12, 0.717391304347826, 0.7777777777777778)
+- ('confusion_matrix: tn, fp, fn, tp:', 126, 36, *26*, 66)
 
 Let delta = -0.10
 The evaluation metrics on the test set (X_test):
