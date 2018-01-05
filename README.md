@@ -122,30 +122,79 @@ After reproducing and expanding the case study in Weka, I decided to reproduce t
 
 For the warm up, I worked through Dr. Brownlee's "Your First Machine Learning Project in Python Step-By-Step" [11]. I wrote up the code with headings to allow the follower of the output to see what is going on.
 
-In addition to my expansion of Weka case study, the Python case study expands the case study further:
+In addition to my expanded Weka case study, the Python part expands the case study further by:
 - additional algorithms for spot checking
-- grid search on the parameters
-- saving and loading of model
+- balancing class labels using LR parameter
+- grid search on the hyperparameters
+- searching for the cross over point between sensitivity and specificity
+- plotting roc curve
+- sensitivity and specificity cross over
+- (not too exciting) saving and loading the model from disk
 
 ### Reproducing & Expansion
 
-Similar to Python Step-By-Step [11], I summarize and visualize the datasets, generating plots where possible.
+Similar to Python Step-By-Step [11], I summarize and visualize the datasets, generating plots where possible. I 
 
 In contrast to creating different files for each datasets, I store the datasets in memory. I rescale the data, both normalization and standardization as suggested in the post [12]. I observe that that the mean and standard deviation are very close to zero and one, respectively, but not exactly. I posted this as a question on the blog [12], and assume that these close-enough values are acceptable in the community and move forward.
 
-I feed the dataset to the algorithms.  For each dataset, a comparison plot is generated, where each algorithm performance is drawn using a box plot.
+I feed the dataset to the algorithms. For each dataset, a comparison plot is generated, where each algorithm performance is drawn using a box plot.
 
-While not too worried about the average accuracy value being different, I notice the plaforms are reporting differences in the statistical significance. This merits further investigation.
+While not too worried about the average accuracy value being different, I notice the Weka and Python are report differences in the statistical significance for the same algorithms. This merits further investigation.
 
-Nonetheless, the algorithms have similar performance. One exception is SVM, which has consistently lower accuracy. The algorithms are instantiated with their default parameters, arguably sufficient for the first run. They contain both linear (LR and LDA) and nonlinear (KNN, CART, NB etc.) algorithms. In all the cases, I see that LR performs well with high accuracy either LR has the highest accuracy or statistically insignificant to others having higher accuracy. 
+Nonetheless, the algorithms have similar performance. One exception is SVM, which has consistently lower accuracy. The algorithms are instantiated with their default parameters, arguably sufficient for the first run. The algorithms contain both linear (LR and LDA) and nonlinear (KNN, CART, NB etc.) algorithms. In all the cases, I see that LR performs well with high accuracy either LR has the highest accuracy or statistically insignificant to others having higher accuracy. One exception is where RF provides statistically significant better accuracy compared to LR. One possible way forward is to fine tune RF to see if we can further improve the accuracy. This is left as future work.
+
+### Grid Search
+
+I take LR to the next rounds. Next step is to fine tune LR. I perform a grid search [13] for LR over C and penalty parameters. LogisticRegression implementation in scikit takes a class_weight parameter, which when set to 'balanced' automatically adjust weights inversely proportional to class frequencies in the input data. I prefer this over oversampling minority class with SMOTE, as that contaminates the samples mildly. I use test_size = 0.33 for splitting train/test sets for grid search. 
+
+Before the actual grid search, I get a baseline accuracy of LR with default parameters and the train/test datasets, namely about 0.76. To my surprise, optimal C and penalty_model parameters from grid search also give us about the same accuracy i.e. 0.76. It turns out the optimal and default C value is the same i.e. 1. However, there is a difference in the penalty model i.e. default is l2 and the optimal is l1. The different penalty model apparently had no effect on the accuracy.
+
+Next I did a quick store and load of the model, and confirm the accuracy score remains the same. 
+
+With the loaded model, I generate the evaluation metrics on the test set (X_test):
+- accuracy_score (about 0.76)^1
+- confusion_matrix ('tn, fp, fn, tp:', 121, 41, 21, 71 )
+- sensitivity or true positive rate (tpr) (about 0.63)
+- specificity or ture negative rate (tnr) (about 0.75)
+- classification report 
+- roc area under the curve (auc) (about 0.84)
+
+### Controlling number of false negatives -- The sensitivity and specificity trade off
+
+Recall, we want to exercise control over false negatives by adjusting the value of delta i.e. as the positive probability crosses 0.5+delta, the trigger happens and the prediction is a positive test. In general, sensitivity and specificity trade off against each other. Recall, we saw an example in the diabetes.xlsx when we changed the value of delta. The original paper [14] that provides the dataset shows that sensitivity and specificity cross over when their values are about 0.76^1. This may be considered a good balance between tpr and tnr. The default value of zero delta provide us with tpr and tnr of 0.63 and 0.75, respectively. I determine the value of delta where sensitivity and specificity cross by looping through a set of delta values and generating respective tpr and tnr values. Note, I am superimposing the delta value on the underlying LR model and probabilities, and then generating predictions and other metrics on the superimposed perspective. The underlying LR model remains unchanged. I looked into pushing the delta value into the underlying but decided against it due to the reasoning by lejlot at stackoverflow [15]. 
+
+I draw a plot show the changing values of sensitivity and specificity with each delta value. From the plot, it can be seen that sensitivity and specificity cross when delta is about 0.026. The rate value of sensitivity and specificity is about 0.76. We have reproduced the result of the paper by LR. In the shell output, we can also see that false negative (fn) increase when the value of delta increases. 
+
+('deltaX,sensitivity_tpr,specificity_tnr:', -0.02, 0.7717391304347826, 0.7407407407407407)
+('confusion_matrix: tn, fp, fn, tp:', 120, 42, *21*, 71)
+...
+('deltaX,sensitivity_tpr,specificity_tnr:', 0.06, 0.7391304347826086, 0.7654320987654321)
+('confusion_matrix: tn, fp, fn, tp:', 124, 38, *24*, 68)
+...
+('deltaX,sensitivity_tpr,specificity_tnr:', 0.12, 0.717391304347826, 0.7777777777777778)
+('confusion_matrix: tn, fp, fn, tp:', 126, 36, *26*, 66)
+
+Let delta = -0.10
+The evaluation metrics on the test set (X_test):
+- accuracy_score (about 0.74)
+- confusion_matrix ('tn, fp, fn, tp:', 111, 51, *16*, 76) <= reduced from 21 when delta=0
+- sensitivity or true positive rate (tpr) (about 0.83) <= increased
+- specificity or ture negative rate (tnr) (about 0.67) <= decreased
+- classification report
+
+Finally, we can also plot the probability values for sorted positive tests and their respective triggers, and visualize them graphically. 
+
+### Future work
+- Investigate why Weka and Python report differences in the statistical significance with their default parameters.
+- Explore if fine tuning RF further improve the accuracy of predictions
 
 
- ht
+## Conclusions
+Personally, I feel drawing a visual grid of too many attributes is overwhelming, especially for scatter plot between attributes. I found a correlation matrix much more helpful in quantifying relationships. In this tutorial, we didn't address any outliers or performed any feature engineering. One reason that jumps out is that it is highly curated dataset. 
 
+My thoughts are Weka Explorer and Experimenter are excellent tools to get quick and dirty analysis with algorithms and datasets without writing code. For run time changes and further fine tuning, coding seems necessary.
 
-
-
-### References
+## References
 <pre> 
 [1] https://machinelearningmastery.com/case-study-predicting-the-onset-of-diabetes-within-five-years-part-1-of-3/
 [2] https://machinelearningmastery.com/start-here/
@@ -159,4 +208,7 @@ Nonetheless, the algorithms have similar performance. One exception is SVM, whic
 [10] https://machinelearningmastery.com/applied-machine-learning-weka-mini-course/
 [11] https://machinelearningmastery.com/machine-learning-in-python-step-by-step/
 [12] https://machinelearningmastery.com/rescaling-data-for-machine-learning-in-python-with-scikit-learn/#comment-425333
+[13] https://machinelearningmastery.com/how-to-tune-algorithm-parameters-with-scikit-learn/
+[14] https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2245318/pdf/procascamc00018-0276.pdf
+[15] https://stackoverflow.com/questions/19984957/scikit-predict-default-threshold
 </pre>

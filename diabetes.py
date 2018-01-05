@@ -204,7 +204,7 @@ datasets.append(('undersampling_attr', undersampling_attr, undersampling_label))
 datasets.append(('oversampling_attr', oversampling_attr, oversampling_label))
 
 models = []
-models.append(('LR', LogisticRegression()))
+models.append(('LR', LogisticRegression())) # based on imbalanced datasets and default parameters
 models.append(('LDA', LinearDiscriminantAnalysis()))
 models.append(('KNN', KNeighborsClassifier()))
 models.append(('CART', DecisionTreeClassifier()))
@@ -246,7 +246,6 @@ for dataname, attributes, target in datasets:
 	ax.set_xticklabels(names)
 	plt.show()
 
-
 test_size = 0.33
 X_train, X_test, Y_train, Y_test = train_test_split(diabetes_attr, label, test_size=test_size,
 random_state=seed)
@@ -258,18 +257,17 @@ print("logr.best_score=",logr.best_score_)
 print("logr.best_estimator_.C=",logr.best_estimator_.C)
 print("logr.best_estimator_.penalty=",logr.best_estimator_.penalty)
 
-#building model
+#building model for baseline
+model = LogisticRegression(class_weight='balanced')
+y_score = model.fit(diabetes_attr, label)
+result = model.score(X_test, Y_test) # determine r2 value
+print("baseline accuracy on X_test without grid search=",result)
+
+#building model with grid search selected parameters
 model = LogisticRegression(class_weight='balanced',C=logr.best_estimator_.C, penalty=logr.best_estimator_.penalty)
 y_score = model.fit(diabetes_attr, label)
 result = model.score(X_test, Y_test) # determine r2 value
-print("score on X_test before storing=",result)
-
-#predict
-rand_index=randint(0, len(label)-1)
-sample = diabetes_attr[rand_index]
-actual = label[rand_index]
-prediction = model.predict([sample])[0]
-print("(actual,prediction) of sample", sample, " at random index=", rand_index, actual, prediction)
+print("accuracy with grid search selected C and penalty_model, and before storing to disk", result)
 
 # save the model to disk
 filename = 'diabetes_py_model.sav' 
@@ -279,7 +277,7 @@ pickle.dump(model, open(filename, 'wb'))
 loaded_model = pickle.load(open(filename, 'rb')) 
 result = loaded_model.score(X_test, Y_test)
 
-print("score on X_test after loading=",result)
+print("accuracy on X_test after loading from disk=",result)
 
 delta0_predictions=loaded_model.predict(X_test)
 print("delta0_predictions")
@@ -289,8 +287,7 @@ print("tn, fp, fn, tp:", tn, fp, fn, tp)
 sensitivity_tpr = float(tp)/(float(tp)+float(fp))
 specificity_tnr = float(tn)/(float(tn)+float(fp))
 print("sensitivity_tpr,specificity_tnr:", sensitivity_tpr,specificity_tnr)
-print(	classification_report(Y_test, delta0_predictions))
-
+print(classification_report(Y_test, delta0_predictions))
 
 delta0_probs=loaded_model.predict_proba(X_test)
 fpr, tpr, thresholds = roc_curve(Y_test, delta0_probs[:, 1])
@@ -320,12 +317,12 @@ for delta in delta_range:
 	report = [[ins[0], ins[1], 1] if (ins[1] > (ins[0]+delta)) else [ins[0], ins[1], 0] for ins in probs]
 	report_df = pandas.DataFrame(report, columns=['neg_prob','pos_prob','pred'])
 	predictions = numpy.array(report_df.values)[:,2]
-#	print("accuracy_score=",accuracy_score(Y_test, predictions))
 	tn, fp, fn, tp=confusion_matrix(Y_test, predictions).ravel()
-#	print("confusion_matrix: tn, fp, fn, tp:", tn, fp, fn, tp)
 	sensitivity_tpr[i]= float(tp)/(float(tp)+float(fn))
 	specificity_tnr[i]= float(tn)/(float(tn)+float(fp))
 	print("deltaX,sensitivity_tpr,specificity_tnr:", delta, sensitivity_tpr[i],specificity_tnr[i]) 
+	#print("accuracy_score=",accuracy_score(Y_test, predictions))
+	print("confusion_matrix: tn, fp, fn, tp:", tn, fp, fn, tp)
 	#print(classification_report(Y_test, predictions))
 	i=i+1
 
@@ -339,13 +336,25 @@ plt.xlabel('delta')
 plt.ylabel('rate(0-1)')
 plt.show()
 
-
-
-report_df=report_df.sort_values(by=['pred','pos_prob'])
-predictions = numpy.array(report_df.values)[:,2]
+delta=-0.10
+print("cross-over of sensitivity and specificity lie at about delta=", delta)
+report=[[ins[0], ins[1], 1] if (ins[1] > (ins[0]+delta)) else [ins[0], ins[1], 0] for ins in probs]
+report_df=pandas.DataFrame(report, columns=['neg_prob','pos_prob','pred'])
+predictions=numpy.array(report_df.values)[:,2]
 positive_prob=numpy.array(report_df.values)[:,1]
 
+print("accuracy_score=",accuracy_score(Y_test, predictions))
+tn, fp, fn, tp=confusion_matrix(Y_test, predictions).ravel()
+print("confusion_matrix: tn, fp, fn, tp:", tn, fp, fn, tp)
+sensitivity_tpr= float(tp)/(float(tp)+float(fn))
+specificity_tnr= float(tn)/(float(tn)+float(fp))
+print("deltaX,sensitivity_tpr,specificity_tnr:", delta, sensitivity_tpr,specificity_tnr) 
+print(classification_report(Y_test, predictions))
 
+# sort instances by (a) class, and then (b) positive probability for plotting
+report_df=report_df.sort_values(by=['pred','pos_prob'])
+predictions=numpy.array(report_df.values)[:,2]
+positive_prob=numpy.array(report_df.values)[:,1]
 
 plt.clf()
 pred_legend,=plt.plot(predictions, 'r', label="prediction") 
@@ -353,6 +362,6 @@ prob_legend,=plt.plot(positive_prob, 'b', label="+ve probability")
 
 plt.legend(handler_map={pred_legend: HandlerLine2D(numpoints=4)})
 plt.xlabel('instance#')
-plt.ylabel('magnitude(0-1)')
+plt.ylabel('probability(0-1)')
 
 plt.show()
