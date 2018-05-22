@@ -185,6 +185,14 @@ Finally, we can also plot the probability values for sorted positive tests and t
 - Investigate why Weka and Python report differences in the statistical significance with their default parameters.
 - Explore if fine tuning RF further improve the accuracy of predictions
 
+## Reproducing in Jupyter and Databrick notebooks
+After reproducing and expanding the case study in Python, I first reproduced it in Jupyter notebook (diabetes.ipynb). The motivation is to get hands-on with Jupyter notebook. In hindsight, it might be natural to explore and develop a data science case study with the notebook first and then transform it into a script. This is because the notebook allows more interactive to and fro modications and micro executions.
+
+Once the Jupyter notebook is complete, I move on to Databricks platform [16]. Databricks aims to help users with cloud-based big data processing using Spark. Also, It has a notebook similar in principle to Jupyter. The community edition offers a single node cluster and associated workspace to create and execute multiple notebooks. The cluster springs to life within minutes, and I use Databricks Runtime Version 4.1(includes Apache Spark 2.3.0, Scala 2.11). I see the Databricks notebook over spark cluster as a jumping board to perform data science at scale. So, I transform diabetes.py into a Databricks notebook [17]. Naturally, I need to upload the data (diabetes.data) to the cluster. It turns out to be mostly a copy paste job except with the following (annoying) differences:
+1. With present version of sklearn (0.18.1) in Databricks cluster, the latest version of SMOTE package does not work. I installed an older compatible version.
+2. The plot.show() needs to be followed by display() for the plot to appear.
+
+After you sign up to Databrciks (say community edition) and setup a cluster, you may import my notebook with a click of a button [17]. Isn't that nice? :-) The only caveat is notebook available for 6 motnhs after publishing. So, I also export it as diabetes_databricks.ipynb so that it remains eternal. It is possible to load Jupyter notebook in Databricks [18], though I haven't tried myself. I need to see how can I use pyspark and scala/spark, perhaps in a different sitting. 
 
 ## Conclusions
 Personally, I feel drawing a visual grid of too many attributes is overwhelming, especially for scatter plot between attributes. I found a correlation matrix much more helpful in quantifying relationships. In this tutorial, we didn't address any outliers or performed any feature engineering. One reason that jumps out is that it is highly curated dataset. 
@@ -208,4 +216,7 @@ My thoughts are Weka Explorer and Experimenter are excellent tools to get quick 
 [13] https://machinelearningmastery.com/how-to-tune-algorithm-parameters-with-scikit-learn/
 [14] https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2245318/pdf/procascamc00018-0276.pdf
 [15] https://stackoverflow.com/questions/19984957/scikit-predict-default-threshold
+[16] https://databricks.com/try-databricks
+[17] https://databricks-prod-cloudfront.cloud.databricks.com/public/4027ec902e239c93eaaa8714f173bcfc/6710283852221561/2246037980686797/3061735664085706/latest.html
+[18] https://vincentlauzon.com/2018/02/27/import-notebooks-in-databricks/
 </pre>

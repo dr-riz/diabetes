@@ -245,6 +245,7 @@ for dataname, attributes, target in datasets:
 	plt.ylabel(scoring)
 	ax.set_xticklabels(names)
 	plt.show()
+	display(plt)
 
 test_size = 0.33
 X_train, X_test, Y_train, Y_test = train_test_split(diabetes_attr, label, test_size=test_size,
